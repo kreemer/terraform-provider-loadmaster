@@ -8,8 +8,9 @@ import (
 	"flag"
 	"log"
 
+	"terraform-provider-loadmaster/internal/provider"
+
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-provider-scaffolding-framework/internal/provider"
 )
 
 var (
