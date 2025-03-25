@@ -168,9 +168,9 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 
 	var client *api.Client
 	if apiKey != "" {
-		client = api.NewClientWithApiKey(apiKey, host)
+		client = api.NewClientWithApiKey(host, apiKey)
 	} else {
-		client = api.NewClientWithUsernamePassword(username, password, host)
+		client = api.NewClientWithUsernamePassword(host, username, password)
 	}
 	resp.DataSourceData = client
 	resp.ResourceData = client
