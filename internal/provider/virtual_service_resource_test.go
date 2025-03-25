@@ -41,6 +41,16 @@ func TestAccExampleResource(t *testing.T) {
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_virtual_service.test",
+						tfjsonpath.New("nickname"),
+						knownvalue.StringExact("hello"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_virtual_service.test",
+						tfjsonpath.New("enabled"),
+						knownvalue.Bool(true),
+					),
 				},
 			},
 			{
@@ -71,9 +81,28 @@ func TestAccExampleResource(t *testing.T) {
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_virtual_service.test",
+						tfjsonpath.New("nickname"),
+						knownvalue.StringExact("hello"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_virtual_service.test",
+						tfjsonpath.New("enabled"),
+						knownvalue.Bool(true),
+					),
 				},
 			},
-			// Delete testing automatically occurs in TestCase
+			{
+				Config: testAccExampleResourceConfigDisabled(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_virtual_service.test",
+						tfjsonpath.New("enabled"),
+						knownvalue.Bool(false),
+					),
+				},
+			},
 		},
 	})
 }
@@ -84,6 +113,21 @@ resource "loadmaster_virtual_service" "test" {
   address = "10.0.0.4"
   port = "9090"
   protocol = "tcp"
+
+  nickname = "hello"
+  enabled = true
+}
+`
+}
+
+func testAccExampleResourceConfigDisabled() string {
+	return `
+resource "loadmaster_virtual_service" "test" {
+  address = "10.0.0.4"
+  port = "9090"
+  protocol = "tcp"
+
+  enabled = false
 }
 `
 }

@@ -34,6 +34,8 @@ type VirtualServiceResourceModel struct {
 	Address  types.String `tfsdk:"address"`
 	Port     types.String `tfsdk:"port"`
 	Protocol types.String `tfsdk:"protocol"`
+	Nickname types.String `tfsdk:"nickname"`
+	Enabled  types.Bool   `tfsdk:"enabled"`
 }
 
 func (r *VirtualServiceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -73,6 +75,16 @@ func (r *VirtualServiceResource) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"nickname": schema.StringAttribute{
+				MarkdownDescription: "The nickname of the virtual service.",
+				Required:            false,
+				Optional:            true,
+			},
+			"enabled": schema.BoolAttribute{
+				MarkdownDescription: "If the virtual service is enabled.",
+				Required:            false,
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -109,7 +121,15 @@ func (r *VirtualServiceResource) Create(ctx context.Context, req resource.Create
 	ctx = tflog.SetField(ctx, "protocol", data.Protocol)
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddVirtualService(data.Address.ValueString(), data.Port.ValueString(), data.Protocol.ValueString(), api.VirtualServiceParameters{})
+	enabled := new(bool)
+	*enabled = data.Enabled.ValueBool()
+
+	response, err := r.client.AddVirtualService(data.Address.ValueString(), data.Port.ValueString(), data.Protocol.ValueString(), api.VirtualServiceParameters{
+		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
+			NickName: data.Nickname.ValueString(),
+			Enable:   enabled,
+		},
+	})
 
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
@@ -122,6 +142,8 @@ func (r *VirtualServiceResource) Create(ctx context.Context, req resource.Create
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
+	data.Nickname = types.StringValue(response.NickName)
+	data.Enabled = types.BoolValue(*response.Enable)
 
 	tflog.Trace(ctx, "created a resource virtual service")
 
@@ -150,6 +172,8 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
+	data.Nickname = types.StringValue(response.NickName)
+	data.Enabled = types.BoolValue(*response.Enable)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -209,6 +233,8 @@ func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.I
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
+	data.Nickname = types.StringValue(response.NickName)
+	data.Enabled = types.BoolValue(*response.Enable)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

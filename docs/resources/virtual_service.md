@@ -29,6 +29,11 @@ resource "loadmaster_virtual_service" "example" {
 - `port` (String) The port of the virtual service.
 - `protocol` (String) The protocol of the virtual service, either `tcp` or `udp`.
 
+### Optional
+
+- `enabled` (Boolean) If the virtual service is enabled.
+- `nickname` (String) The nickname of the virtual service.
+
 ### Read-Only
 
 - `id` (Number) Identifier of the virtual service. This is also called `Index` in the LoadMaster API.

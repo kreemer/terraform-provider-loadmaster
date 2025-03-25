@@ -28,5 +28,7 @@ data "loadmaster_virtual_service" "example" {
 ### Read-Only
 
 - `address` (String) The address of the virtual service. Should be an IP address of an interface attached to the LoadMaster.
+- `enabled` (Boolean) If the virtual service is enabled.
+- `nickname` (String) The nickname of the virtual service.
 - `port` (String) The port of the virtual service.
 - `protocol` (String) The protocol of the virtual service, either `tcp` or `udp`.
