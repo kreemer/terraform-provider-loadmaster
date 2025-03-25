@@ -97,7 +97,7 @@ func TestAccExampleResource(t *testing.T) {
 				Config: testAccExampleResourceConfigDisabled(),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"loadmaster_virtual_service.test",
+						"loadmaster_virtual_service.test2",
 						tfjsonpath.New("enabled"),
 						knownvalue.Bool(false),
 					),
@@ -122,7 +122,7 @@ resource "loadmaster_virtual_service" "test" {
 
 func testAccExampleResourceConfigDisabled() string {
 	return `
-resource "loadmaster_virtual_service" "test" {
+resource "loadmaster_virtual_service" "test2" {
   address = "10.0.0.4"
   port = "9090"
   protocol = "tcp"

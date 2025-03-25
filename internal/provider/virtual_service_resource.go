@@ -77,12 +77,12 @@ func (r *VirtualServiceResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"nickname": schema.StringAttribute{
 				MarkdownDescription: "The nickname of the virtual service.",
-				Required:            false,
+				Computed:            true,
 				Optional:            true,
 			},
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: "If the virtual service is enabled.",
-				Required:            false,
+				Computed:            true,
 				Optional:            true,
 			},
 		},
@@ -182,7 +182,7 @@ func (r *VirtualServiceResource) Update(ctx context.Context, req resource.Update
 	var data VirtualServiceResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
+	resp.Diagnostics.AddError("Client Error", "Not implemented")
 	if resp.Diagnostics.HasError() {
 		return
 	}
