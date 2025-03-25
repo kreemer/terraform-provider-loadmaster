@@ -23,7 +23,7 @@ provider "scaffolding" {
 
 ### Optional
 
-- `api_key` (String, Sensitive) API key for the loadmaster instance
-- `host` (String) IP address and port of the loadmaster instance
-- `password` (String, Sensitive) Password for the loadmaster instance
-- `username` (String) Username for the loadmaster instance
+- `api_key` (String, Sensitive) API key for the LoadMaster instance
+- `host` (String) IP address and port of the LoadMaster instance
+- `password` (String, Sensitive) Password for the LoadMaster instance
+- `username` (String) Username for the LoadMaster instance
