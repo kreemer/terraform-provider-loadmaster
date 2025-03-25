@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,7 +20,7 @@ func TestAccExampleResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccExampleResourceConfig(),
+				Config: testAccExampleResourceConfig("hello"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"loadmaster_virtual_service.test",
@@ -59,7 +60,7 @@ func TestAccExampleResource(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExampleResourceConfig(),
+				Config: testAccExampleResourceConfig("blupp"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"loadmaster_virtual_service.test",
@@ -84,7 +85,7 @@ func TestAccExampleResource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"loadmaster_virtual_service.test",
 						tfjsonpath.New("nickname"),
-						knownvalue.StringExact("hello"),
+						knownvalue.StringExact("blupp"),
 					),
 					statecheck.ExpectKnownValue(
 						"loadmaster_virtual_service.test",
@@ -107,17 +108,17 @@ func TestAccExampleResource(t *testing.T) {
 	})
 }
 
-func testAccExampleResourceConfig() string {
-	return `
+func testAccExampleResourceConfig(nickname string) string {
+	return fmt.Sprintf(`
 resource "loadmaster_virtual_service" "test" {
   address = "10.0.0.4"
   port = "9090"
   protocol = "tcp"
 
-  nickname = "hello"
+  nickname = "%s"
   enabled = true
 }
-`
+`, nickname)
 }
 
 func testAccExampleResourceConfigDisabled() string {

@@ -121,13 +121,10 @@ func (r *VirtualServiceResource) Create(ctx context.Context, req resource.Create
 	ctx = tflog.SetField(ctx, "protocol", data.Protocol)
 	tflog.Debug(ctx, "creating a resource")
 
-	enabled := new(bool)
-	*enabled = data.Enabled.ValueBool()
-
 	response, err := r.client.AddVirtualService(data.Address.ValueString(), data.Port.ValueString(), data.Protocol.ValueString(), api.VirtualServiceParameters{
 		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 			NickName: data.Nickname.ValueString(),
-			Enable:   enabled,
+			Enable:   bool2ptr(data.Enabled.ValueBool()),
 		},
 	})
 
@@ -182,10 +179,27 @@ func (r *VirtualServiceResource) Update(ctx context.Context, req resource.Update
 	var data VirtualServiceResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	resp.Diagnostics.AddError("Client Error", "Not implemented")
-	if resp.Diagnostics.HasError() {
+
+	id := int(data.Id.ValueInt32())
+	response, err := r.client.ModifyVirtualService(id, api.VirtualServiceParameters{
+		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
+			NickName: data.Nickname.ValueString(),
+			Enable:   bool2ptr(data.Enabled.ValueBool()),
+		},
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
 		return
 	}
+	tflog.SetField(ctx, "response", response)
+	tflog.Trace(ctx, "Received valid response from API")
+
+	data.Id = types.Int32Value(int32(response.Index))
+	data.Address = types.StringValue(response.Address)
+	data.Port = types.StringValue(response.Port)
+	data.Protocol = types.StringValue(response.Protocol)
+	data.Nickname = types.StringValue(response.NickName)
+	data.Enabled = types.BoolValue(*response.Enable)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -237,4 +251,8 @@ func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.I
 	data.Enabled = types.BoolValue(*response.Enable)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func bool2ptr(b bool) *bool {
+	return &b
 }
