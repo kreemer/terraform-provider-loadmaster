@@ -6,8 +6,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
@@ -140,7 +140,7 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 	id := int(data.Id.ValueInt32())
 	response, err := r.client.ShowVirtualService(id)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read example, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
 		return
 	}
 	tflog.SetField(ctx, "response", response)
@@ -178,11 +178,37 @@ func (r *VirtualServiceResource) Delete(ctx context.Context, req resource.Delete
 	id := int(data.Id.ValueInt32())
 	_, err := r.client.DeleteVirtualService(id)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read example, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
 		return
 	}
 }
 
 func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	var data VirtualServiceResourceModel
+
+	id, err := strconv.Atoi(req.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid ID", fmt.Sprintf("Unable to convert ID to integer: %s", err))
+		return
+	}
+
+	response, err := r.client.ShowVirtualService(id)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
+		return
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.SetField(ctx, "response", response)
+	tflog.Trace(ctx, "Received valid response from API")
+
+	data.Id = types.Int32Value(int32(response.Index))
+	data.Address = types.StringValue(response.Address)
+	data.Port = types.StringValue(response.Port)
+	data.Protocol = types.StringValue(response.Protocol)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

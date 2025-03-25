@@ -48,20 +48,20 @@ func (p *LoadMasterProvider) Schema(ctx context.Context, req provider.SchemaRequ
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
-				MarkdownDescription: "IP address and port of the loadmaster instance",
+				MarkdownDescription: "IP address and port of the LoadMaster instance",
 				Optional:            true,
 			},
 			"username": schema.StringAttribute{
-				MarkdownDescription: "Username for the loadmaster instance",
+				MarkdownDescription: "Username for the LoadMaster instance",
 				Optional:            true,
 			},
 			"password": schema.StringAttribute{
-				MarkdownDescription: "Password for the loadmaster instance",
+				MarkdownDescription: "Password for the LoadMaster instance",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: "API key for the loadmaster instance",
+				MarkdownDescription: "API key for the LoadMaster instance",
 				Optional:            true,
 				Sensitive:           true,
 			},
@@ -81,8 +81,8 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 	if data.Host.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("host"),
-			"Unknown LoadMaster API Host",
-			"The provider cannot create the LoadMaster API client as there is an unknown configuration value for the LoadMaster host. "+
+			"Unknown LoadMaster Host",
+			"The provider cannot create the LoadMaster client as there is an unknown configuration value for the LoadMaster Host. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the LOADMASTER_HOST environment variable.",
 		)
 	}
@@ -90,8 +90,8 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 	if data.Username.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("username"),
-			"Unknown LoadMaster API Username",
-			"The provider cannot create the LoadMaster API client as there is an unknown configuration value for the LoadMaster username. "+
+			"Unknown LoadMaster Username",
+			"The provider cannot create the LoadMaster client as there is an unknown configuration value for the LoadMaster Username. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the LOADMASTER_USERNAME environment variable.",
 		)
 	}
@@ -100,7 +100,7 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 		resp.Diagnostics.AddAttributeError(
 			path.Root("password"),
 			"Unknown LoadMaster API Password",
-			"The provider cannot create the LoadMaster API client as there is an unknown configuration value for the LoadMaster password. "+
+			"The provider cannot create the LoadMaster client as there is an unknown configuration value for the LoadMaster Password. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the LOADMASTER_PASSWORD environment variable.",
 		)
 	}
@@ -109,7 +109,7 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_key"),
 			"Unknown LoadMaster API Key",
-			"The provider cannot create the LoadMaster API client as there is an unknown configuration value for the LoadMaster API Key. "+
+			"The provider cannot create the LoadMaster client as there is an unknown configuration value for the LoadMaster API Key. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the LOADMASTER_API_KEY environment variable.",
 		)
 	}
@@ -145,9 +145,9 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 	if host == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("host"),
-			"Missing HashiCups API Host",
-			"The provider cannot create the HashiCups API client as there is a missing or empty value for the HashiCups API host. "+
-				"Set the host value in the configuration or use the HASHICUPS_HOST environment variable. "+
+			"Missing LoadMaster Host",
+			"The provider cannot create the LoadMaster client as there is a missing or empty value for the LoadMaster host. "+
+				"Set the host value in the configuration or use the LOADMASTER_HOST environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -155,10 +155,10 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 	if apiKey == "" && (username == "" || password == "") {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("username"),
-			"Missing HashiCups API Username",
-			"The provider cannot create the HashiCups API client as there is a missing or empty value for the HashiCups API username. "+
-				"Set the username value in the configuration or use the HASHICUPS_USERNAME environment variable. "+
-				"If either is already set, ensure the value is not empty.",
+			"Missing LoadMaster Credentials",
+			"The provider cannot create the LoadMaster client as there is a missing or empty value for the credentials. "+
+				"Either set the username / password configuration in the provider setup or with the LOADMASTER_USERNAME / LOADMASTER_PASSWORD environment variable "+
+				"or provide an API Key in the api_key configuration or with the LOADMASTER_API_KEY environment variable.",
 		)
 	}
 
@@ -172,13 +172,8 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 	} else {
 		client = api.NewClientWithUsernamePassword(username, password, host)
 	}
-
-	// Make the HashiCups client available during DataSource and Resource
-	// type Configure methods.
 	resp.DataSourceData = client
 	resp.ResourceData = client
-	// Configuration values are now available.
-	// if data.Endpoint.IsNull() { /* ... */ }
 }
 
 func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Resource {

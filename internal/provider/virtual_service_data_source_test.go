@@ -22,9 +22,9 @@ func TestAccExampleDataSource(t *testing.T) {
 				Config: testAccExampleDataSourceConfig,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"data.scaffolding_example.test",
+						"data.loadmaster_virtual_service.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("example-id"),
+						knownvalue.NotNull(),
 					),
 				},
 			},
@@ -33,7 +33,13 @@ func TestAccExampleDataSource(t *testing.T) {
 }
 
 const testAccExampleDataSourceConfig = `
-data "scaffolding_example" "test" {
-  configurable_attribute = "example"
+resource "loadmaster_virtual_service" "example" {
+	address = "10.0.0.4"
+	port = "9090"
+	protocol = "tcp"
+}
+
+data "loadmaster_virtual_service" "test" {
+	id = loadmaster_virtual_service.example.id
 }
 `
