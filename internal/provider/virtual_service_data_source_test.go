@@ -26,6 +26,11 @@ func TestVirtualServiceDataSource(t *testing.T) {
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
+					statecheck.ExpectKnownValue(
+						"data.loadmaster_virtual_service.test",
+						tfjsonpath.New("type"),
+						knownvalue.StringExact("http2"),
+					),
 				},
 			},
 		},
@@ -37,6 +42,7 @@ resource "loadmaster_virtual_service" "example" {
 	address = "10.0.0.4"
 	port = "9090"
 	protocol = "tcp"
+	type = "http2"
 }
 
 data "loadmaster_virtual_service" "test" {

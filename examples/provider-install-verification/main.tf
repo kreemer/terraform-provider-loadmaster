@@ -15,16 +15,24 @@ resource "loadmaster_virtual_service" "example" {
 
   nickname = "master"
   enabled  = true
+  standard_options = {
+    scheduling_method = "rr"
+  }
 }
 
 resource "loadmaster_sub_virtual_service" "example1" {
   virtual_service_id = loadmaster_virtual_service.example.id
-
-  nickname = "subvs1"
+  type               = "http"
+  nickname           = "subvs1"
+  standard_options = {
+    scheduling_method = "rr"
+  }
 }
-
 resource "loadmaster_sub_virtual_service" "example2" {
   virtual_service_id = loadmaster_virtual_service.example.id
-
-  nickname = "subvs2"
+  type               = "gen"
+  nickname           = "subvs2"
+  standard_options = {
+    scheduling_method = "wrr"
+  }
 }

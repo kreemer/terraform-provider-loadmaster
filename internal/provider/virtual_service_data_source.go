@@ -32,6 +32,7 @@ type VirtualServiceDataSourceModel struct {
 	Address  types.String `tfsdk:"address"`
 	Port     types.String `tfsdk:"port"`
 	Protocol types.String `tfsdk:"protocol"`
+	Type     types.String `tfsdk:"type"`
 	Nickname types.String `tfsdk:"nickname"`
 	Enabled  types.Bool   `tfsdk:"enabled"`
 }
@@ -60,6 +61,10 @@ func (d *VirtualServiceDataSource) Schema(ctx context.Context, req datasource.Sc
 			},
 			"protocol": schema.StringAttribute{
 				MarkdownDescription: "The protocol of the virtual service, either `tcp` or `udp`.",
+				Computed:            true,
+			},
+			"type": schema.StringAttribute{
+				MarkdownDescription: "The type of the virtual service, either `gen`, `http`, `http2`, `ts`, `tls` or `log`.",
 				Computed:            true,
 			},
 			"nickname": schema.StringAttribute{
@@ -117,6 +122,7 @@ func (d *VirtualServiceDataSource) Read(ctx context.Context, req datasource.Read
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 	data.Enabled = types.BoolValue(*response.Enable)
 

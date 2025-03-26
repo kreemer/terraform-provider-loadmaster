@@ -32,3 +32,4 @@ data "loadmaster_virtual_service" "example" {
 - `nickname` (String) The nickname of the virtual service.
 - `port` (String) The port of the virtual service.
 - `protocol` (String) The protocol of the virtual service, either `tcp` or `udp`.
+- `type` (String) The type of the virtual service, either `gen`, `http`, `http2`, `ts`, `tls` or `log`.

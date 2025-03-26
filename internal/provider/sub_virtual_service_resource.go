@@ -31,6 +31,7 @@ type SubVirtualServiceResource struct {
 type SubVirtualServiceResourceModel struct {
 	Id               types.Int32  `tfsdk:"id"`
 	VirtualServiceId types.Int32  `tfsdk:"virtual_service_id"`
+	Type             types.String `tfsdk:"type"`
 	Nickname         types.String `tfsdk:"nickname"`
 }
 
@@ -56,6 +57,11 @@ func (r *SubVirtualServiceResource) Schema(ctx context.Context, req resource.Sch
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
+			},
+			"type": schema.StringAttribute{
+				MarkdownDescription: "The type of the sub virtual service, either `gen`, `http`, `http2`, `ts`, `tls` or `log`.",
+				Computed:            true,
+				Optional:            true,
 			},
 			"nickname": schema.StringAttribute{
 				MarkdownDescription: "The nickname of the sub virtual service.",
@@ -106,18 +112,19 @@ func (r *SubVirtualServiceResource) Create(ctx context.Context, req resource.Cre
 	tflog.Trace(ctx, "Received valid response from API")
 
 	data.Id = types.Int32Value(int32(response.SubVS[len(response.SubVS)-1].VSIndex))
+
 	response, err = r.client.ModifySubVirtualService(int(data.Id.ValueInt32()), api.VirtualServiceParameters{
 		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
+			VSType:   data.Type.ValueString(),
 			NickName: data.Nickname.ValueString(),
 		},
 	})
+
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to modify sub virtual service, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sub virtual service, got error: %s", err))
 		return
 	}
-	tflog.SetField(ctx, "response", response)
-	tflog.Trace(ctx, "Received valid response from API")
-
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 
 	tflog.Trace(ctx, "created a resource sub virtual service")
@@ -149,7 +156,7 @@ func (r *SubVirtualServiceResource) Read(ctx context.Context, req resource.ReadR
 	tflog.Trace(ctx, "Received valid response from API")
 
 	data.Id = types.Int32Value(int32(response.Index))
-
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
 
@@ -165,6 +172,7 @@ func (r *SubVirtualServiceResource) Update(ctx context.Context, req resource.Upd
 	response, err := r.client.ModifySubVirtualService(id, api.VirtualServiceParameters{
 		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 			NickName: data.Nickname.ValueString(),
+			VSType:   data.Type.ValueString(),
 		},
 	})
 	if err != nil {
@@ -179,6 +187,7 @@ func (r *SubVirtualServiceResource) Update(ctx context.Context, req resource.Upd
 	tflog.Trace(ctx, "Received valid response from API")
 
 	data.Id = types.Int32Value(int32(response.Index))
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
 
@@ -224,6 +233,7 @@ func (r *SubVirtualServiceResource) ImportState(ctx context.Context, req resourc
 	tflog.Trace(ctx, "Received valid response from API")
 
 	data.Id = types.Int32Value(int32(response.Index))
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
 

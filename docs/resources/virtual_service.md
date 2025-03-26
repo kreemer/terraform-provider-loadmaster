@@ -33,6 +33,7 @@ resource "loadmaster_virtual_service" "example" {
 
 - `enabled` (Boolean) If the virtual service is enabled.
 - `nickname` (String) The nickname of the virtual service.
+- `type` (String) The type of the virtual service, either `gen`, `http`, `http2`, `ts`, `tls` or `log`.
 
 ### Read-Only
 

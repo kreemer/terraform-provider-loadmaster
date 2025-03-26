@@ -26,6 +26,11 @@ func TestSubVirtualServiceDataSource(t *testing.T) {
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
+					statecheck.ExpectKnownValue(
+						"data.loadmaster_sub_virtual_service.test",
+						tfjsonpath.New("type"),
+						knownvalue.StringExact("http2"),
+					),
 				},
 			},
 		},
@@ -43,6 +48,7 @@ resource "loadmaster_sub_virtual_service" "example" {
   virtual_service_id = loadmaster_virtual_service.example.id
 
   nickname = "subvs"
+  type = "http2"
 }
   
 data "loadmaster_sub_virtual_service" "test" {

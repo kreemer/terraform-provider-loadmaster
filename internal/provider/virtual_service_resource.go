@@ -34,6 +34,7 @@ type VirtualServiceResourceModel struct {
 	Address  types.String `tfsdk:"address"`
 	Port     types.String `tfsdk:"port"`
 	Protocol types.String `tfsdk:"protocol"`
+	Type     types.String `tfsdk:"type"`
 	Nickname types.String `tfsdk:"nickname"`
 	Enabled  types.Bool   `tfsdk:"enabled"`
 }
@@ -74,6 +75,11 @@ func (r *VirtualServiceResource) Schema(ctx context.Context, req resource.Schema
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"type": schema.StringAttribute{
+				MarkdownDescription: "The type of the virtual service, either `gen`, `http`, `http2`, `ts`, `tls` or `log`.",
+				Computed:            true,
+				Optional:            true,
 			},
 			"nickname": schema.StringAttribute{
 				MarkdownDescription: "The nickname of the virtual service.",
@@ -124,6 +130,7 @@ func (r *VirtualServiceResource) Create(ctx context.Context, req resource.Create
 	response, err := r.client.AddVirtualService(data.Address.ValueString(), data.Port.ValueString(), data.Protocol.ValueString(), api.VirtualServiceParameters{
 		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 			NickName: data.Nickname.ValueString(),
+			VSType:   data.Type.ValueString(),
 			Enable:   bool2ptr(data.Enabled.ValueBool()),
 		},
 	})
@@ -139,6 +146,7 @@ func (r *VirtualServiceResource) Create(ctx context.Context, req resource.Create
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 	data.Enabled = types.BoolValue(*response.Enable)
 
@@ -174,6 +182,7 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 	data.Enabled = types.BoolValue(*response.Enable)
 
@@ -189,6 +198,7 @@ func (r *VirtualServiceResource) Update(ctx context.Context, req resource.Update
 	response, err := r.client.ModifyVirtualService(id, api.VirtualServiceParameters{
 		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 			NickName: data.Nickname.ValueString(),
+			VSType:   data.Type.ValueString(),
 			Enable:   bool2ptr(data.Enabled.ValueBool()),
 		},
 	})
@@ -203,6 +213,7 @@ func (r *VirtualServiceResource) Update(ctx context.Context, req resource.Update
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 	data.Enabled = types.BoolValue(*response.Enable)
 
@@ -252,6 +263,7 @@ func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.I
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
 	data.Enabled = types.BoolValue(*response.Enable)
 

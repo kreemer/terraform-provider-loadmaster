@@ -102,6 +102,11 @@ func TestVirtualServiceResource(t *testing.T) {
 						tfjsonpath.New("enabled"),
 						knownvalue.Bool(false),
 					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_virtual_service.test2",
+						tfjsonpath.New("type"),
+						knownvalue.StringExact("http"),
+					),
 				},
 			},
 		},
@@ -127,7 +132,7 @@ resource "loadmaster_virtual_service" "test2" {
   address = "10.0.0.4"
   port = "9090"
   protocol = "tcp"
-
+  type = "http"
   enabled = false
 }
 `

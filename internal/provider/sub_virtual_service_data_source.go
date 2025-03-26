@@ -31,6 +31,7 @@ type SubVirtualServiceDataSourceModel struct {
 	Id               types.Int32  `tfsdk:"id"`
 	VirtualServiceId types.Int32  `tfsdk:"virtual_service_id"`
 	Nickname         types.String `tfsdk:"nickname"`
+	Type             types.String `tfsdk:"type"`
 }
 
 func (d *SubVirtualServiceDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -48,6 +49,10 @@ func (d *SubVirtualServiceDataSource) Schema(ctx context.Context, req datasource
 			},
 			"virtual_service_id": schema.Int32Attribute{
 				MarkdownDescription: "The id of the virtual service. This is also called `Index` in the LoadMaster API.",
+				Computed:            true,
+			},
+			"type": schema.StringAttribute{
+				MarkdownDescription: "The type of the sub virtual service, either `gen`, `http`, `http2`, `ts`, `tls` or `log`.",
 				Computed:            true,
 			},
 			"nickname": schema.StringAttribute{
@@ -98,8 +103,9 @@ func (d *SubVirtualServiceDataSource) Read(ctx context.Context, req datasource.R
 	tflog.Trace(ctx, "Received valid response from API")
 
 	data.Id = types.Int32Value(int32(response.Index))
-	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
+	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
+	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
