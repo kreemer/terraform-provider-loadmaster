@@ -137,15 +137,14 @@ func (r *SubVirtualServiceResource) Read(ctx context.Context, req resource.ReadR
 	id := int(data.Id.ValueInt32())
 	response, err := r.client.ShowSubVirtualService(id)
 	if err != nil {
-		if response != nil {
-			if response.Code == 422 && response.Message == "Unknown VS" {
-				resp.State.RemoveResource(ctx)
-				return
-			}
+		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
+			resp.State.RemoveResource(ctx)
+			return
 		}
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read sub virtual service, got error: %s", err))
 		return
 	}
+
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
@@ -170,8 +169,12 @@ func (r *SubVirtualServiceResource) Update(ctx context.Context, req resource.Upd
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
+	}
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
@@ -194,7 +197,7 @@ func (r *SubVirtualServiceResource) Delete(ctx context.Context, req resource.Del
 	id := int(data.Id.ValueInt32())
 	_, err := r.client.DeleteSubVirtualService(id)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read sub virtual service, got error: %s", err))
 		return
 	}
 }
@@ -211,7 +214,6 @@ func (r *SubVirtualServiceResource) ImportState(ctx context.Context, req resourc
 	response, err := r.client.ShowSubVirtualService(id)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
-		return
 	}
 
 	if resp.Diagnostics.HasError() {

@@ -159,11 +159,9 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 	id := int(data.Id.ValueInt32())
 	response, err := r.client.ShowVirtualService(id)
 	if err != nil {
-		if response != nil {
-			if response.Code == 422 && response.Message == "Unknown VS" {
-				resp.State.RemoveResource(ctx)
-				return
-			}
+		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
+			resp.State.RemoveResource(ctx)
+			return
 		}
 
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
@@ -223,7 +221,7 @@ func (r *VirtualServiceResource) Delete(ctx context.Context, req resource.Delete
 	id := int(data.Id.ValueInt32())
 	_, err := r.client.DeleteVirtualService(id)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete virtual service, got error: %s", err))
 		return
 	}
 }
