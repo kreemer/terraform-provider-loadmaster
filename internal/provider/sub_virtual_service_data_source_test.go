@@ -12,17 +12,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-func TestVirtualServiceDataSource(t *testing.T) {
+func TestSubVirtualServiceDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: testVirtualServiceDataSourceConfig,
+				Config: testSubVirtualServiceDataSourceConfig,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"data.loadmaster_virtual_service.test",
+						"data.loadmaster_sub_virtual_service.test",
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
@@ -32,14 +32,20 @@ func TestVirtualServiceDataSource(t *testing.T) {
 	})
 }
 
-const testVirtualServiceDataSourceConfig = `
+const testSubVirtualServiceDataSourceConfig = `
 resource "loadmaster_virtual_service" "example" {
 	address = "10.0.0.4"
 	port = "9090"
 	protocol = "tcp"
 }
 
-data "loadmaster_virtual_service" "test" {
-	id = loadmaster_virtual_service.example.id
+resource "loadmaster_sub_virtual_service" "example" {
+  virtual_service_id = loadmaster_virtual_service.example.id
+
+  nickname = "subvs"
+}
+  
+data "loadmaster_sub_virtual_service" "test" {
+  id = loadmaster_sub_virtual_service.example.id
 }
 `

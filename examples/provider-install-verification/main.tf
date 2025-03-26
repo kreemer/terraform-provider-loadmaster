@@ -8,22 +8,23 @@ terraform {
 
 provider "loadmaster" {}
 
-data "loadmaster_virtual_service" "example" {
-  id = "1"
-}
-
 resource "loadmaster_virtual_service" "example" {
   address  = "10.0.0.4"
-  port     = "8889"
+  port     = "9123"
   protocol = "tcp"
 
+  nickname = "master"
+  enabled  = true
 }
 
-output "virtual_service" {
-  value = data.loadmaster_virtual_service.example
+resource "loadmaster_sub_virtual_service" "example1" {
+  virtual_service_id = loadmaster_virtual_service.example.id
+
+  nickname = "subvs1"
 }
 
+resource "loadmaster_sub_virtual_service" "example2" {
+  virtual_service_id = loadmaster_virtual_service.example.id
 
-output "virtual_service2" {
-  value = loadmaster_virtual_service.example
+  nickname = "subvs2"
 }

@@ -159,6 +159,13 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 	id := int(data.Id.ValueInt32())
 	response, err := r.client.ShowVirtualService(id)
 	if err != nil {
+		if response != nil {
+			if response.Code == 422 && response.Message == "Unknown VS" {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+		}
+
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
 		return
 	}
@@ -251,8 +258,4 @@ func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.I
 	data.Enabled = types.BoolValue(*response.Enable)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func bool2ptr(b bool) *bool {
-	return &b
 }

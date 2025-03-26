@@ -13,14 +13,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-func TestAccExampleResource(t *testing.T) {
+func TestVirtualServiceResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccExampleResourceConfig("hello"),
+				Config: testVirtualServiceResourceConfig("hello"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"loadmaster_virtual_service.test",
@@ -60,7 +60,7 @@ func TestAccExampleResource(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExampleResourceConfig("blupp"),
+				Config: testVirtualServiceResourceConfig("blupp"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"loadmaster_virtual_service.test",
@@ -95,7 +95,7 @@ func TestAccExampleResource(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccExampleResourceConfigDisabled(),
+				Config: testVirtualServiceResourceConfigDisabled(),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"loadmaster_virtual_service.test2",
@@ -108,7 +108,7 @@ func TestAccExampleResource(t *testing.T) {
 	})
 }
 
-func testAccExampleResourceConfig(nickname string) string {
+func testVirtualServiceResourceConfig(nickname string) string {
 	return fmt.Sprintf(`
 resource "loadmaster_virtual_service" "test" {
   address = "10.0.0.4"
@@ -121,7 +121,7 @@ resource "loadmaster_virtual_service" "test" {
 `, nickname)
 }
 
-func testAccExampleResourceConfigDisabled() string {
+func testVirtualServiceResourceConfigDisabled() string {
 	return `
 resource "loadmaster_virtual_service" "test2" {
   address = "10.0.0.4"

@@ -179,6 +179,7 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewVirtualServiceResource,
+		NewSubVirtualServiceResource,
 	}
 }
 
@@ -189,6 +190,7 @@ func (p *LoadMasterProvider) EphemeralResources(ctx context.Context) []func() ep
 func (p *LoadMasterProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewVirtualServiceDataSource,
+		NewSubVirtualServiceDataSource,
 	}
 }
 
@@ -202,4 +204,8 @@ func New(version string) func() provider.Provider {
 			version: version,
 		}
 	}
+}
+
+func bool2ptr(b bool) *bool {
+	return &b
 }
