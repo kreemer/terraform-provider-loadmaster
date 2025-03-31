@@ -58,12 +58,41 @@ func (d *RealServerDataSource) Schema(ctx context.Context, req datasource.Schema
 				MarkdownDescription: "The id of the virtual service. This is also called `Index` in the LoadMaster API.",
 				Required:            true,
 			},
-			"type": schema.StringAttribute{
-				MarkdownDescription: "The type of the sub virtual service, either `gen`, `http`, `http2`, `ts`, `tls` or `log`.",
+			"address": schema.StringAttribute{
+				MarkdownDescription: "The address of the real server. Should be an IP address.",
 				Computed:            true,
 			},
-			"nickname": schema.StringAttribute{
-				MarkdownDescription: "The nickname of the sub virtual service.",
+			"port": schema.Int32Attribute{
+				MarkdownDescription: "The port of the real server.",
+				Computed:            true,
+			},
+			"weight": schema.Int32Attribute{
+				MarkdownDescription: "The weight of the real server.",
+				Computed:            true,
+			},
+			"forward": schema.StringAttribute{
+				MarkdownDescription: "The forward of the real server.",
+				Optional:            true,
+				Computed:            true,
+			},
+			"enable": schema.BoolAttribute{
+				MarkdownDescription: "The enable of the real server.",
+				Computed:            true,
+			},
+			"limit": schema.Int32Attribute{
+				MarkdownDescription: "The limit of the real server.",
+				Computed:            true,
+			},
+			"critical": schema.BoolAttribute{
+				MarkdownDescription: "The critical of the real server.",
+				Computed:            true,
+			},
+			"follow": schema.Int32Attribute{
+				MarkdownDescription: "The follow of the real server.",
+				Computed:            true,
+			},
+			"dns_name": schema.StringAttribute{
+				MarkdownDescription: "The dns name of the real server.",
 				Computed:            true,
 			},
 		},
@@ -98,7 +127,7 @@ func (d *RealServerDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := d.client.ShowRealServer(data.VirtualServiceId.String(), data.Id.String())
+	response, err := d.client.ShowRealServer(data.VirtualServiceId.String(), "!"+data.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read real server, got error: %s", err))
 		return
@@ -108,8 +137,15 @@ func (d *RealServerDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	tflog.Trace(ctx, "Received valid response from API")
 
 	real_server_response := response.Rs[len(response.Rs)-1]
-	data.Id = types.Int32Value(int32(real_server_response.RsIndex))
-	data.VirtualServiceId = types.Int32Value(int32(real_server_response.VSIndex))
+	data.Address = types.StringValue(real_server_response.Address)
+	data.Port = types.Int32Value(int32(real_server_response.Port))
+	data.Weight = types.Int32Value(int32(real_server_response.Weight))
+	data.Forward = types.StringValue(real_server_response.Forward)
+	data.Enable = types.BoolValue(*real_server_response.Enable)
+	data.Limit = types.Int32Value(int32(real_server_response.Limit))
+	data.Critical = types.BoolValue(*real_server_response.Critical)
+	data.Follow = types.Int32Value(int32(real_server_response.Follow))
+	data.DnsName = types.StringValue(real_server_response.DnsName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

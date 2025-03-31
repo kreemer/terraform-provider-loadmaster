@@ -48,7 +48,6 @@ resource "loadmaster_real_server" "test" {
   virtual_service_id = loadmaster_virtual_service.test.id
   address = "10.0.0.99"
   port = "80"
-  protocol = "tcp"
 }
 
 data "loadmaster_real_server" "test" {

@@ -180,6 +180,7 @@ func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Re
 	return []func() resource.Resource{
 		NewVirtualServiceResource,
 		NewSubVirtualServiceResource,
+		NewRealServerResource,
 	}
 }
 
@@ -191,6 +192,7 @@ func (p *LoadMasterProvider) DataSources(ctx context.Context) []func() datasourc
 	return []func() datasource.DataSource{
 		NewVirtualServiceDataSource,
 		NewSubVirtualServiceDataSource,
+		NewRealServerDataSource,
 	}
 }
 

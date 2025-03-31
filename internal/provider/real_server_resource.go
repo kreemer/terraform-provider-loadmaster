@@ -83,26 +83,32 @@ func (r *RealServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"weight": schema.Int32Attribute{
 				MarkdownDescription: "The weight of the real server.",
 				Optional:            true,
+				Computed:            true,
 			},
 			"forward": schema.StringAttribute{
 				MarkdownDescription: "The forward of the real server.",
 				Optional:            true,
+				Computed:            true,
 			},
 			"enable": schema.BoolAttribute{
 				MarkdownDescription: "The enable of the real server.",
 				Optional:            true,
+				Computed:            true,
 			},
 			"limit": schema.Int32Attribute{
 				MarkdownDescription: "The limit of the real server.",
 				Optional:            true,
+				Computed:            true,
 			},
 			"critical": schema.BoolAttribute{
 				MarkdownDescription: "The critical of the real server.",
 				Optional:            true,
+				Computed:            true,
 			},
 			"follow": schema.Int32Attribute{
 				MarkdownDescription: "The follow of the real server.",
 				Optional:            true,
+				Computed:            true,
 			},
 			"dns_name": schema.StringAttribute{
 				MarkdownDescription: "The dns name of the real server.",
@@ -186,7 +192,7 @@ func (r *RealServerResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	response, err := r.client.ShowRealServer(data.VirtualServiceId.String(), data.Id.String())
+	response, err := r.client.ShowRealServer(data.VirtualServiceId.String(), "!"+data.Id.String())
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
 			resp.State.RemoveResource(ctx)
@@ -220,7 +226,7 @@ func (r *RealServerResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	response, err := r.client.ModifyRealServer(data.VirtualServiceId.String(), data.Id.String(), api.RealServerParameters{
+	response, err := r.client.ModifyRealServer(data.VirtualServiceId.String(), "!"+data.Id.String(), api.RealServerParameters{
 		Weight:   int(data.Weight.ValueInt32()),
 		Forward:  data.Forward.ValueString(),
 		Enable:   bool2ptr(data.Enable.ValueBool()),
@@ -264,7 +270,7 @@ func (r *RealServerResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	_, err := r.client.DeleteRealServer(data.VirtualServiceId.String(), data.Id.String())
+	_, err := r.client.DeleteRealServer(data.VirtualServiceId.String(), "!"+data.Id.String())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete real server, got error: %s", err))
 		return
@@ -281,9 +287,9 @@ func (r *RealServerResource) ImportState(ctx context.Context, req resource.Impor
 		return
 	}
 
-	response, err := r.client.ShowRealServer(id_list[0], id_list[1])
+	response, err := r.client.ShowRealServer(id_list[0], "!"+id_list[1])
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read real server, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read real server for import, got error: %s", err))
 	}
 
 	if resp.Diagnostics.HasError() {
