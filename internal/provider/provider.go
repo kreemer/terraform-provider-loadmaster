@@ -46,22 +46,23 @@ func (p *LoadMasterProvider) Metadata(ctx context.Context, req provider.Metadata
 
 func (p *LoadMasterProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Provider for Progress LoadMaster",
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
-				MarkdownDescription: "IP address and port of the LoadMaster instance",
+				MarkdownDescription: "IP address and port of the LoadMaster instance.",
 				Optional:            true,
 			},
 			"username": schema.StringAttribute{
-				MarkdownDescription: "Username for the LoadMaster instance",
+				MarkdownDescription: "Username for the LoadMaster instance.",
 				Optional:            true,
 			},
 			"password": schema.StringAttribute{
-				MarkdownDescription: "Password for the LoadMaster instance",
+				MarkdownDescription: "Password for the LoadMaster instance.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: "API key for the LoadMaster instance",
+				MarkdownDescription: "API key for the LoadMaster instance.",
 				Optional:            true,
 				Sensitive:           true,
 			},
@@ -181,6 +182,7 @@ func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Re
 		NewVirtualServiceResource,
 		NewSubVirtualServiceResource,
 		NewRealServerResource,
+		NewMatchContentRuleResource,
 	}
 }
 
@@ -193,6 +195,7 @@ func (p *LoadMasterProvider) DataSources(ctx context.Context) []func() datasourc
 		NewVirtualServiceDataSource,
 		NewSubVirtualServiceDataSource,
 		NewRealServerDataSource,
+		NewMatchContentRuleDataSource,
 	}
 }
 
