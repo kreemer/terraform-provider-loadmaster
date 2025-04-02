@@ -183,6 +183,7 @@ func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Re
 		NewSubVirtualServiceResource,
 		NewRealServerResource,
 		NewMatchContentRuleResource,
+		NewAddHeaderRuleResource,
 	}
 }
 
@@ -196,6 +197,7 @@ func (p *LoadMasterProvider) DataSources(ctx context.Context) []func() datasourc
 		NewSubVirtualServiceDataSource,
 		NewRealServerDataSource,
 		NewMatchContentRuleDataSource,
+		NewAddHeaderRuleDataSource,
 	}
 }
 
