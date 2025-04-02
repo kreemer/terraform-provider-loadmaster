@@ -102,7 +102,7 @@ func testAddHeaderRuleResourceUpdate() string {
 resource "loadmaster_add_header_rule" "test_rule" {
   id = "test_rule"
   replacement = "test2"
-  match_type = "postfix"
+  header = "TEST"
 }
 `
 }

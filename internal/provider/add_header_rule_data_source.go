@@ -108,7 +108,7 @@ func (d *AddHeaderRuleDataSource) Read(ctx context.Context, req datasource.ReadR
 	rule := response.AddHeaderRules[len(response.AddHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
-	data.Replacement = types.StringValue(rule.Replacement)
+	data.Replacement = types.StringValue(rule.HeaderValue)
 	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
 	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
 

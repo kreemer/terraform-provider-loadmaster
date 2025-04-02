@@ -34,7 +34,7 @@ func TestAddHeaderRuleDataSource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.loadmaster_add_header_rule.test",
 						tfjsonpath.New("replacement"),
-						knownvalue.StringExact("test"),
+						knownvalue.StringExact("postfix"),
 					),
 				},
 			},

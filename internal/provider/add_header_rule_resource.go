@@ -122,7 +122,7 @@ func (r *AddHeaderRuleResource) Create(ctx context.Context, req resource.CreateR
 	rule := response.AddHeaderRules[len(response.AddHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
-	data.Replacement = types.StringValue(rule.Replacement)
+	data.Replacement = types.StringValue(rule.HeaderValue)
 	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
 	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
 
@@ -156,7 +156,7 @@ func (r *AddHeaderRuleResource) Read(ctx context.Context, req resource.ReadReque
 	rule := response.AddHeaderRules[len(response.AddHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
-	data.Replacement = types.StringValue(rule.Replacement)
+	data.Replacement = types.StringValue(rule.HeaderValue)
 	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
 	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
 
@@ -188,7 +188,7 @@ func (r *AddHeaderRuleResource) Update(ctx context.Context, req resource.UpdateR
 	rule := response.AddHeaderRules[len(response.AddHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
-	data.Replacement = types.StringValue(rule.Replacement)
+	data.Replacement = types.StringValue(rule.HeaderValue)
 	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
 	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
 
@@ -229,7 +229,7 @@ func (r *AddHeaderRuleResource) ImportState(ctx context.Context, req resource.Im
 	rule := response.AddHeaderRules[len(response.AddHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
-	data.Replacement = types.StringValue(rule.Replacement)
+	data.Replacement = types.StringValue(rule.HeaderValue)
 	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
 	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
 
