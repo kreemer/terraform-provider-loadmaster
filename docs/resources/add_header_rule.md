@@ -1,6 +1,6 @@
 ---
 page_title: "loadmaster_add_header_rule Resource - loadmaster"
-subcategory: "rules"
+subcategory: "Rules"
 description: |-
   Manages a AddHeaderRule.
 ---

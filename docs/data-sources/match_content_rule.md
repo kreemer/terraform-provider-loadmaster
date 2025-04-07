@@ -1,6 +1,6 @@
 ---
 page_title: "loadmaster_match_content_rule Data Source - loadmaster"
-subcategory: "rules"
+subcategory: "Rules"
 description: |-
   Use this data source to retrieve information about a match content rule.
 ---
