@@ -28,11 +28,6 @@ func TestModifyUrlRuleDataSource(t *testing.T) {
 					),
 					statecheck.ExpectKnownValue(
 						"data.loadmaster_modify_url_rule.test",
-						tfjsonpath.New("header"),
-						knownvalue.StringExact("TEST"),
-					),
-					statecheck.ExpectKnownValue(
-						"data.loadmaster_modify_url_rule.test",
 						tfjsonpath.New("pattern"),
 						knownvalue.StringExact("A"),
 					),
@@ -50,7 +45,6 @@ func TestModifyUrlRuleDataSource(t *testing.T) {
 const testModifyUrlRuleDataSourceConfig = `
 resource "loadmaster_modify_url_rule" "test_rule" {
   id = "test_rule_replace"
-  header = "TEST"
   pattern = "A"
   replacement = "B"
 }
