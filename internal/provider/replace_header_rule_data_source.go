@@ -31,7 +31,7 @@ type ReplaceHeaderRuleDataSourceModel struct {
 	Id           types.String `tfsdk:"id"`
 	Header       types.String `tfsdk:"header"`
 	Pattern      types.String `tfsdk:"pattern"`
-	Replacement  types.String `tfsdk:"rule"`
+	Replacement  types.String `tfsdk:"replacement"`
 	OnlyOnFlag   types.Int32  `tfsdk:"only_on_flag"`
 	OnlyOnNoFlag types.Int32  `tfsdk:"only_on_no_flag"`
 }
