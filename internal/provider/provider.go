@@ -187,6 +187,7 @@ func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Re
 		NewDeleteHeaderRuleResource,
 		NewReplaceHeaderRuleResource,
 		NewModifyUrlRuleResource,
+		NewReplaceBodyRuleResource,
 	}
 }
 
@@ -204,6 +205,7 @@ func (p *LoadMasterProvider) DataSources(ctx context.Context) []func() datasourc
 		NewDeleteHeaderRuleDataSource,
 		NewReplaceHeaderRuleDataSource,
 		NewModifyUrlRuleDataSource,
+		NewReplaceBodyRuleDataSource,
 	}
 }
 
