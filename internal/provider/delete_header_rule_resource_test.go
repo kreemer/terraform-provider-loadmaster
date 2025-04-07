@@ -76,7 +76,6 @@ func testDeleteHeaderRuleResource() string {
 	return `
 resource "loadmaster_delete_header_rule" "test_rule" {
   id = "test_rule_delete"
-  replacement = "test"
   header = "TEST1"
 }
 `
