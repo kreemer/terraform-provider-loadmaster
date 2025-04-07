@@ -109,7 +109,7 @@ func (r *ReplaceBodyRuleResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddRule("3", data.Id.ValueString(), api.GeneralRule{
+	response, err := r.client.AddRule("5", data.Id.ValueString(), api.GeneralRule{
 		Pattern:         data.Pattern.ValueString(),
 		Replacement:     data.Replacement.ValueString(),
 		Caseindependent: data.NoCase.ValueBoolPointer(),
