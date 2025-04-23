@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -29,7 +30,7 @@ type RealServerDataSource struct {
 
 type RealServerDataSourceModel struct {
 	Id               types.Int32  `tfsdk:"id"`
-	VirtualServiceId types.Int32  `tfsdk:"virtual_service_id"`
+	VirtualServiceId types.String `tfsdk:"virtual_service_id"`
 	Address          types.String `tfsdk:"address"`
 	Port             types.Int32  `tfsdk:"port"`
 	Weight           types.Int32  `tfsdk:"weight"`
@@ -54,7 +55,7 @@ func (d *RealServerDataSource) Schema(ctx context.Context, req datasource.Schema
 				MarkdownDescription: "The real server id. This is also called `RIndex` in the LoadMaster API.",
 				Required:            true,
 			},
-			"virtual_service_id": schema.Int32Attribute{
+			"virtual_service_id": schema.StringAttribute{
 				MarkdownDescription: "The id of the virtual service. This is also called `Index` in the LoadMaster API.",
 				Required:            true,
 			},
@@ -137,14 +138,15 @@ func (d *RealServerDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	tflog.Trace(ctx, "Received valid response from API")
 
 	real_server_response := response.Rs[len(response.Rs)-1]
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(int32(real_server_response.Port))
-	data.Weight = types.Int32Value(int32(real_server_response.Weight))
+	data.Port = types.Int32Value(real_server_response.Port)
+	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
-	data.Enable = types.BoolValue(*real_server_response.Enable)
-	data.Limit = types.Int32Value(int32(real_server_response.Limit))
+	data.Enable = types.BoolPointerValue(real_server_response.Enable)
+	data.Limit = types.Int32Value(real_server_response.Limit)
 	data.Critical = types.BoolValue(*real_server_response.Critical)
-	data.Follow = types.Int32Value(int32(real_server_response.Follow))
+	data.Follow = types.Int32Value(real_server_response.Follow)
 	data.DnsName = types.StringValue(real_server_response.DnsName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

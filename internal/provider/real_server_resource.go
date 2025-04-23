@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -31,7 +32,7 @@ type RealServerResource struct {
 
 type RealServerResourceModel struct {
 	Id               types.Int32  `tfsdk:"id"`
-	VirtualServiceId types.Int32  `tfsdk:"virtual_service_id"`
+	VirtualServiceId types.String `tfsdk:"virtual_service_id"`
 	Address          types.String `tfsdk:"address"`
 	Port             types.Int32  `tfsdk:"port"`
 	Weight           types.Int32  `tfsdk:"weight"`
@@ -59,11 +60,11 @@ func (r *RealServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 					int32planmodifier.UseStateForUnknown(),
 				},
 			},
-			"virtual_service_id": schema.Int32Attribute{
+			"virtual_service_id": schema.StringAttribute{
 				MarkdownDescription: "The id of the virtual service. This is also called `VIndex` in the LoadMaster API.",
 				Required:            true,
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"address": schema.StringAttribute{
@@ -166,16 +167,16 @@ func (r *RealServerResource) Create(ctx context.Context, req resource.CreateRequ
 	tflog.Trace(ctx, "Received valid response from API")
 
 	real_server_response := response.Rs[len(response.Rs)-1]
-	data.Id = types.Int32Value(int32(real_server_response.RsIndex))
-	data.VirtualServiceId = types.Int32Value(int32(real_server_response.VSIndex))
+	data.Id = types.Int32Value(real_server_response.RsIndex)
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(int32(real_server_response.Port))
-	data.Weight = types.Int32Value(int32(real_server_response.Weight))
+	data.Port = types.Int32Value(real_server_response.Port)
+	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
-	data.Enable = types.BoolValue(*real_server_response.Enable)
-	data.Limit = types.Int32Value(int32(real_server_response.Limit))
-	data.Critical = types.BoolValue(*real_server_response.Critical)
-	data.Follow = types.Int32Value(int32(real_server_response.Follow))
+	data.Enable = types.BoolPointerValue(real_server_response.Enable)
+	data.Limit = types.Int32Value(real_server_response.Limit)
+	data.Critical = types.BoolPointerValue(real_server_response.Critical)
+	data.Follow = types.Int32Value(real_server_response.Follow)
 	data.DnsName = types.StringValue(real_server_response.DnsName)
 
 	tflog.Trace(ctx, "created a resource real server")
@@ -206,16 +207,16 @@ func (r *RealServerResource) Read(ctx context.Context, req resource.ReadRequest,
 	tflog.Trace(ctx, "Received valid response from API")
 
 	real_server_response := response.Rs[len(response.Rs)-1]
-	data.Id = types.Int32Value(int32(real_server_response.RsIndex))
-	data.VirtualServiceId = types.Int32Value(int32(real_server_response.VSIndex))
+	data.Id = types.Int32Value(real_server_response.RsIndex)
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(int32(real_server_response.Port))
-	data.Weight = types.Int32Value(int32(real_server_response.Weight))
+	data.Port = types.Int32Value(real_server_response.Port)
+	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
-	data.Enable = types.BoolValue(*real_server_response.Enable)
-	data.Limit = types.Int32Value(int32(real_server_response.Limit))
-	data.Critical = types.BoolValue(*real_server_response.Critical)
-	data.Follow = types.Int32Value(int32(real_server_response.Follow))
+	data.Enable = types.BoolPointerValue(real_server_response.Enable)
+	data.Limit = types.Int32Value(real_server_response.Limit)
+	data.Critical = types.BoolPointerValue(real_server_response.Critical)
+	data.Follow = types.Int32Value(real_server_response.Follow)
 	data.DnsName = types.StringValue(real_server_response.DnsName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -246,16 +247,16 @@ func (r *RealServerResource) Update(ctx context.Context, req resource.UpdateRequ
 	tflog.Trace(ctx, "Received valid response from API")
 
 	real_server_response := response.Rs[len(response.Rs)-1]
-	data.Id = types.Int32Value(int32(real_server_response.RsIndex))
-	data.VirtualServiceId = types.Int32Value(int32(real_server_response.VSIndex))
+	data.Id = types.Int32Value(real_server_response.RsIndex)
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(int32(real_server_response.Port))
-	data.Weight = types.Int32Value(int32(real_server_response.Weight))
+	data.Port = types.Int32Value(real_server_response.Port)
+	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
-	data.Enable = types.BoolValue(*real_server_response.Enable)
-	data.Limit = types.Int32Value(int32(real_server_response.Limit))
-	data.Critical = types.BoolValue(*real_server_response.Critical)
-	data.Follow = types.Int32Value(int32(real_server_response.Follow))
+	data.Enable = types.BoolPointerValue(real_server_response.Enable)
+	data.Limit = types.Int32Value(real_server_response.Limit)
+	data.Critical = types.BoolPointerValue(real_server_response.Critical)
+	data.Follow = types.Int32Value(real_server_response.Follow)
 	data.DnsName = types.StringValue(real_server_response.DnsName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -299,16 +300,16 @@ func (r *RealServerResource) ImportState(ctx context.Context, req resource.Impor
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 	real_server_response := response.Rs[len(response.Rs)-1]
-	data.Id = types.Int32Value(int32(real_server_response.RsIndex))
-	data.VirtualServiceId = types.Int32Value(int32(real_server_response.VSIndex))
+	data.Id = types.Int32Value(real_server_response.RsIndex)
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(int32(real_server_response.Port))
-	data.Weight = types.Int32Value(int32(real_server_response.Weight))
+	data.Port = types.Int32Value(real_server_response.Port)
+	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
-	data.Enable = types.BoolValue(*real_server_response.Enable)
-	data.Limit = types.Int32Value(int32(real_server_response.Limit))
-	data.Critical = types.BoolValue(*real_server_response.Critical)
-	data.Follow = types.Int32Value(int32(real_server_response.Follow))
+	data.Enable = types.BoolPointerValue(real_server_response.Enable)
+	data.Limit = types.Int32Value(real_server_response.Limit)
+	data.Critical = types.BoolPointerValue(real_server_response.Critical)
+	data.Follow = types.Int32Value(real_server_response.Follow)
 	data.DnsName = types.StringValue(real_server_response.DnsName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
