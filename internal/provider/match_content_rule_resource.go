@@ -149,16 +149,16 @@ func (r *MatchContentRuleResource) Create(ctx context.Context, req resource.Crea
 
 	response, err := r.client.AddRule("0", data.Id.ValueString(), api.GeneralRule{
 		Header:       data.Header.ValueStringPointer(),
-		Pattern:      data.Pattern.ValueString(),
-		Matchtype:    data.MatchType.ValueString(),
-		Inchost:      data.IncHost.ValueBoolPointer(),
-		Nocase:       data.NoCase.ValueBoolPointer(),
-		Negate:       data.Negate.ValueBoolPointer(),
-		Incquery:     data.IncQuery.ValueBoolPointer(),
-		Setonmatch:   int(data.SetOnMatch.ValueInt32()),
-		Onlyonflag:   int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag: int(data.OnlyOnNoFlag.ValueInt32()),
-		Mustfail:     data.MustFail.ValueBoolPointer(),
+		Pattern:      data.Pattern.ValueStringPointer(),
+		MatchType:    data.MatchType.ValueStringPointer(),
+		IncHost:      data.IncHost.ValueBoolPointer(),
+		NoCase:       data.IncHost.ValueBoolPointer(),
+		Negate:       data.IncHost.ValueBoolPointer(),
+		IncQuery:     data.IncHost.ValueBoolPointer(),
+		SetOnMatch:   data.SetOnMatch.ValueInt32Pointer(),
+		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
+		MustFail:     data.IncHost.ValueBoolPointer(),
 	})
 
 	if err != nil {
@@ -172,15 +172,15 @@ func (r *MatchContentRuleResource) Create(ctx context.Context, req resource.Crea
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
-	data.MatchType = types.StringValue(rule.Matchtype)
-	data.IncHost = types.BoolPointerValue(rule.Inchost)
-	data.NoCase = types.BoolPointerValue(rule.Nocase)
+	data.MatchType = types.StringValue(rule.MatchType)
+	data.IncHost = types.BoolPointerValue(rule.IncHost)
+	data.NoCase = types.BoolPointerValue(rule.CaseIndependent)
 	data.Negate = types.BoolPointerValue(rule.Negate)
-	data.IncQuery = types.BoolPointerValue(rule.Inchost)
-	data.SetOnMatch = types.Int32Value(int32(rule.Setonmatch))
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
-	data.MustFail = types.BoolPointerValue(rule.Mustfail)
+	data.IncQuery = types.BoolPointerValue(rule.IncHost)
+	data.SetOnMatch = types.Int32PointerValue(rule.SetOnMatch)
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
+	data.MustFail = types.BoolPointerValue(rule.MustFail)
 
 	tflog.Trace(ctx, "created a resource match content rule")
 
@@ -213,15 +213,15 @@ func (r *MatchContentRuleResource) Read(ctx context.Context, req resource.ReadRe
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
-	data.MatchType = types.StringValue(rule.Matchtype)
-	data.IncHost = types.BoolPointerValue(rule.Inchost)
-	data.NoCase = types.BoolPointerValue(rule.Nocase)
+	data.MatchType = types.StringValue(rule.MatchType)
+	data.IncHost = types.BoolPointerValue(rule.IncHost)
+	data.NoCase = types.BoolPointerValue(rule.CaseIndependent)
 	data.Negate = types.BoolPointerValue(rule.Negate)
-	data.IncQuery = types.BoolPointerValue(rule.Inchost)
-	data.SetOnMatch = types.Int32Value(int32(rule.Setonmatch))
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
-	data.MustFail = types.BoolPointerValue(rule.Mustfail)
+	data.IncQuery = types.BoolPointerValue(rule.IncHost)
+	data.SetOnMatch = types.Int32PointerValue(rule.SetOnMatch)
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
+	data.MustFail = types.BoolPointerValue(rule.MustFail)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -233,16 +233,16 @@ func (r *MatchContentRuleResource) Update(ctx context.Context, req resource.Upda
 
 	response, err := r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
 		Header:       data.Header.ValueStringPointer(),
-		Pattern:      data.Pattern.ValueString(),
-		Matchtype:    data.MatchType.ValueString(),
-		Inchost:      data.IncHost.ValueBoolPointer(),
-		Nocase:       data.IncHost.ValueBoolPointer(),
+		Pattern:      data.Pattern.ValueStringPointer(),
+		MatchType:    data.MatchType.ValueStringPointer(),
+		IncHost:      data.IncHost.ValueBoolPointer(),
+		NoCase:       data.IncHost.ValueBoolPointer(),
 		Negate:       data.IncHost.ValueBoolPointer(),
-		Incquery:     data.IncHost.ValueBoolPointer(),
-		Setonmatch:   int(data.SetOnMatch.ValueInt32()),
-		Onlyonflag:   int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag: int(data.OnlyOnNoFlag.ValueInt32()),
-		Mustfail:     data.IncHost.ValueBoolPointer(),
+		IncQuery:     data.IncHost.ValueBoolPointer(),
+		SetOnMatch:   data.SetOnMatch.ValueInt32Pointer(),
+		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
+		MustFail:     data.IncHost.ValueBoolPointer(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update match content rule, got error: %s", err))
@@ -259,15 +259,15 @@ func (r *MatchContentRuleResource) Update(ctx context.Context, req resource.Upda
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
-	data.MatchType = types.StringValue(rule.Matchtype)
-	data.IncHost = types.BoolPointerValue(rule.Inchost)
-	data.NoCase = types.BoolPointerValue(rule.Nocase)
+	data.MatchType = types.StringValue(rule.MatchType)
+	data.IncHost = types.BoolPointerValue(rule.IncHost)
+	data.NoCase = types.BoolPointerValue(rule.CaseIndependent)
 	data.Negate = types.BoolPointerValue(rule.Negate)
-	data.IncQuery = types.BoolPointerValue(rule.Inchost)
-	data.SetOnMatch = types.Int32Value(int32(rule.Setonmatch))
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
-	data.MustFail = types.BoolPointerValue(rule.Mustfail)
+	data.IncQuery = types.BoolPointerValue(rule.IncHost)
+	data.SetOnMatch = types.Int32PointerValue(rule.SetOnMatch)
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
+	data.MustFail = types.BoolPointerValue(rule.MustFail)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -307,15 +307,15 @@ func (r *MatchContentRuleResource) ImportState(ctx context.Context, req resource
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
-	data.MatchType = types.StringValue(rule.Matchtype)
-	data.IncHost = types.BoolPointerValue(rule.Inchost)
-	data.NoCase = types.BoolPointerValue(rule.Nocase)
+	data.MatchType = types.StringValue(rule.MatchType)
+	data.IncHost = types.BoolPointerValue(rule.IncHost)
+	data.NoCase = types.BoolPointerValue(rule.CaseIndependent)
 	data.Negate = types.BoolPointerValue(rule.Negate)
-	data.IncQuery = types.BoolPointerValue(rule.Inchost)
-	data.SetOnMatch = types.Int32Value(int32(rule.Setonmatch))
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
-	data.MustFail = types.BoolPointerValue(rule.Mustfail)
+	data.IncQuery = types.BoolPointerValue(rule.IncHost)
+	data.SetOnMatch = types.Int32PointerValue(rule.SetOnMatch)
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
+	data.MustFail = types.BoolPointerValue(rule.MustFail)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

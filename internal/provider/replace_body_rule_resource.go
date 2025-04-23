@@ -110,11 +110,11 @@ func (r *ReplaceBodyRuleResource) Create(ctx context.Context, req resource.Creat
 	tflog.Debug(ctx, "creating a resource")
 
 	response, err := r.client.AddRule("5", data.Id.ValueString(), api.GeneralRule{
-		Pattern:         data.Pattern.ValueString(),
-		Replacement:     data.Replacement.ValueString(),
-		Caseindependent: data.NoCase.ValueBoolPointer(),
-		Onlyonflag:      int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag:    int(data.OnlyOnNoFlag.ValueInt32()),
+		Pattern:         data.Pattern.ValueStringPointer(),
+		Replacement:     data.Replacement.ValueStringPointer(),
+		CaseIndependent: data.NoCase.ValueBoolPointer(),
+		OnlyOnFlag:      data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag:    data.OnlyOnNoFlag.ValueInt32Pointer(),
 	})
 
 	if err != nil {
@@ -128,9 +128,9 @@ func (r *ReplaceBodyRuleResource) Create(ctx context.Context, req resource.Creat
 	data.Id = types.StringValue(rule.Name)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.NoCase = types.BoolPointerValue(rule.Caseindependent)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.NoCase = types.BoolPointerValue(rule.CaseIndependent)
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	tflog.Trace(ctx, "created a resource replace body rule")
 
@@ -163,9 +163,9 @@ func (r *ReplaceBodyRuleResource) Read(ctx context.Context, req resource.ReadReq
 	data.Id = types.StringValue(rule.Name)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.NoCase = types.BoolPointerValue(rule.Caseindependent)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.NoCase = types.BoolPointerValue(rule.CaseIndependent)
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -176,11 +176,11 @@ func (r *ReplaceBodyRuleResource) Update(ctx context.Context, req resource.Updat
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	response, err := r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
-		Pattern:         data.Pattern.ValueString(),
-		Replacement:     data.Replacement.ValueString(),
-		Caseindependent: data.NoCase.ValueBoolPointer(),
-		Onlyonflag:      int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag:    int(data.OnlyOnNoFlag.ValueInt32()),
+		Pattern:         data.Pattern.ValueStringPointer(),
+		Replacement:     data.Replacement.ValueStringPointer(),
+		CaseIndependent: data.NoCase.ValueBoolPointer(),
+		OnlyOnFlag:      data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag:    data.OnlyOnNoFlag.ValueInt32Pointer(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update replace body rule, got error: %s", err))
@@ -197,9 +197,9 @@ func (r *ReplaceBodyRuleResource) Update(ctx context.Context, req resource.Updat
 	data.Id = types.StringValue(rule.Name)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.NoCase = types.BoolPointerValue(rule.Caseindependent)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.NoCase = types.BoolPointerValue(rule.CaseIndependent)
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -239,9 +239,9 @@ func (r *ReplaceBodyRuleResource) ImportState(ctx context.Context, req resource.
 	data.Id = types.StringValue(rule.Name)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.NoCase = types.BoolPointerValue(rule.Caseindependent)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.NoCase = types.BoolPointerValue(rule.CaseIndependent)
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

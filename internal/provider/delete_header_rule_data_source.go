@@ -103,8 +103,8 @@ func (d *DeleteHeaderRuleDataSource) Read(ctx context.Context, req datasource.Re
 	rule := response.DeleteHeaderRules[len(response.DeleteHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringPointerValue(&rule.Pattern)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

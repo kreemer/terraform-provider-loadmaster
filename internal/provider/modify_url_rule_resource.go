@@ -103,10 +103,10 @@ func (r *ModifyUrlRuleResource) Create(ctx context.Context, req resource.CreateR
 	tflog.Debug(ctx, "creating a resource")
 
 	response, err := r.client.AddRule("4", data.Id.ValueString(), api.GeneralRule{
-		Pattern:      data.Pattern.ValueString(),
-		Replacement:  data.Replacement.ValueString(),
-		Onlyonflag:   int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag: int(data.OnlyOnNoFlag.ValueInt32()),
+		Pattern:      data.Pattern.ValueStringPointer(),
+		Replacement:  data.Replacement.ValueStringPointer(),
+		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
 	})
 
 	if err != nil {
@@ -120,8 +120,8 @@ func (r *ModifyUrlRuleResource) Create(ctx context.Context, req resource.CreateR
 	data.Id = types.StringValue(rule.Name)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	tflog.Trace(ctx, "created a resource modify url rule")
 
@@ -154,8 +154,8 @@ func (r *ModifyUrlRuleResource) Read(ctx context.Context, req resource.ReadReque
 	data.Id = types.StringValue(rule.Name)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -166,10 +166,10 @@ func (r *ModifyUrlRuleResource) Update(ctx context.Context, req resource.UpdateR
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	response, err := r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
-		Pattern:      data.Pattern.ValueString(),
-		Replacement:  data.Replacement.ValueString(),
-		Onlyonflag:   int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag: int(data.OnlyOnNoFlag.ValueInt32()),
+		Pattern:      data.Pattern.ValueStringPointer(),
+		Replacement:  data.Replacement.ValueStringPointer(),
+		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update modify url rule, got error: %s", err))
@@ -186,8 +186,8 @@ func (r *ModifyUrlRuleResource) Update(ctx context.Context, req resource.UpdateR
 	data.Id = types.StringValue(rule.Name)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -227,8 +227,8 @@ func (r *ModifyUrlRuleResource) ImportState(ctx context.Context, req resource.Im
 	data.Id = types.StringValue(rule.Name)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

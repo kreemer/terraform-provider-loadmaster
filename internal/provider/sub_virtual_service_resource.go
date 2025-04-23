@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/kreemer/loadmaster-go-client/api"
@@ -29,8 +29,8 @@ type SubVirtualServiceResource struct {
 }
 
 type SubVirtualServiceResourceModel struct {
-	Id               types.Int32  `tfsdk:"id"`
-	VirtualServiceId types.Int32  `tfsdk:"virtual_service_id"`
+	Id               types.String `tfsdk:"id"`
+	VirtualServiceId types.String `tfsdk:"virtual_service_id"`
 	Type             types.String `tfsdk:"type"`
 	Nickname         types.String `tfsdk:"nickname"`
 }
@@ -44,18 +44,18 @@ func (r *SubVirtualServiceResource) Schema(ctx context.Context, req resource.Sch
 		MarkdownDescription: "Manages a sub virtual service.",
 
 		Attributes: map[string]schema.Attribute{
-			"id": schema.Int32Attribute{
+			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Identifier of the sub virtual service. This is also called `Index` in the LoadMaster API.",
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"virtual_service_id": schema.Int32Attribute{
+			"virtual_service_id": schema.StringAttribute{
 				MarkdownDescription: "The id of the virtual service. This is also called `Index` in the LoadMaster API.",
 				Required:            true,
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"type": schema.StringAttribute{
@@ -102,7 +102,7 @@ func (r *SubVirtualServiceResource) Create(ctx context.Context, req resource.Cre
 	ctx = tflog.SetField(ctx, "virtual_service_id", data.VirtualServiceId)
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddSubVirtualService(int(data.VirtualServiceId.ValueInt32()), api.VirtualServiceParameters{})
+	response, err := r.client.AddSubVirtualService(data.VirtualServiceId.ValueString(), api.VirtualServiceParameters{})
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sub virtual service, got error: %s", err))
@@ -111,9 +111,9 @@ func (r *SubVirtualServiceResource) Create(ctx context.Context, req resource.Cre
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.SubVS[len(response.SubVS)-1].VSIndex))
+	data.Id = types.StringValue(strconv.Itoa(int(response.SubVS[len(response.SubVS)-1].VSIndex)))
 
-	response, err = r.client.ModifySubVirtualService(int(data.Id.ValueInt32()), api.VirtualServiceParameters{
+	response, err = r.client.ModifySubVirtualService(data.Id.ValueString(), api.VirtualServiceParameters{
 		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 			VSType:   data.Type.ValueString(),
 			NickName: data.Nickname.ValueString(),
@@ -141,7 +141,7 @@ func (r *SubVirtualServiceResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	id := int(data.Id.ValueInt32())
+	id := data.Id.ValueString()
 	response, err := r.client.ShowSubVirtualService(id)
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
@@ -155,10 +155,10 @@ func (r *SubVirtualServiceResource) Read(ctx context.Context, req resource.ReadR
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
-	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(response.MasterVSID)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -168,7 +168,7 @@ func (r *SubVirtualServiceResource) Update(ctx context.Context, req resource.Upd
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	id := int(data.Id.ValueInt32())
+	id := data.Id.ValueString()
 	response, err := r.client.ModifySubVirtualService(id, api.VirtualServiceParameters{
 		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 			NickName: data.Nickname.ValueString(),
@@ -186,10 +186,10 @@ func (r *SubVirtualServiceResource) Update(ctx context.Context, req resource.Upd
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
-	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(response.MasterVSID)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -203,7 +203,7 @@ func (r *SubVirtualServiceResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	id := int(data.Id.ValueInt32())
+	id := data.Id.ValueString()
 	_, err := r.client.DeleteSubVirtualService(id)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read sub virtual service, got error: %s", err))
@@ -214,11 +214,7 @@ func (r *SubVirtualServiceResource) Delete(ctx context.Context, req resource.Del
 func (r *SubVirtualServiceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data SubVirtualServiceResourceModel
 
-	id, err := strconv.Atoi(req.ID)
-	if err != nil {
-		resp.Diagnostics.AddError("Invalid ID", fmt.Sprintf("Unable to convert ID to integer: %s", err))
-		return
-	}
+	id := data.Id.ValueString()
 
 	response, err := r.client.ShowSubVirtualService(id)
 	if err != nil {
@@ -232,10 +228,10 @@ func (r *SubVirtualServiceResource) ImportState(ctx context.Context, req resourc
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
-	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(response.MasterVSID)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

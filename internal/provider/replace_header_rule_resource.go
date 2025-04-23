@@ -110,10 +110,10 @@ func (r *ReplaceHeaderRuleResource) Create(ctx context.Context, req resource.Cre
 
 	response, err := r.client.AddRule("3", data.Id.ValueString(), api.GeneralRule{
 		Header:       data.Header.ValueStringPointer(),
-		Pattern:      data.Pattern.ValueString(),
-		Replacement:  data.Replacement.ValueString(),
-		Onlyonflag:   int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag: int(data.OnlyOnNoFlag.ValueInt32()),
+		Pattern:      data.Pattern.ValueStringPointer(),
+		Replacement:  data.Replacement.ValueStringPointer(),
+		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
 	})
 
 	if err != nil {
@@ -128,8 +128,8 @@ func (r *ReplaceHeaderRuleResource) Create(ctx context.Context, req resource.Cre
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	tflog.Trace(ctx, "created a resource replace header rule")
 
@@ -163,8 +163,8 @@ func (r *ReplaceHeaderRuleResource) Read(ctx context.Context, req resource.ReadR
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -176,10 +176,10 @@ func (r *ReplaceHeaderRuleResource) Update(ctx context.Context, req resource.Upd
 
 	response, err := r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
 		Header:       data.Header.ValueStringPointer(),
-		Pattern:      data.Pattern.ValueString(),
-		Replacement:  data.Replacement.ValueString(),
-		Onlyonflag:   int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag: int(data.OnlyOnNoFlag.ValueInt32()),
+		Pattern:      data.Pattern.ValueStringPointer(),
+		Replacement:  data.Replacement.ValueStringPointer(),
+		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update replace header rule, got error: %s", err))
@@ -197,8 +197,8 @@ func (r *ReplaceHeaderRuleResource) Update(ctx context.Context, req resource.Upd
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -239,8 +239,8 @@ func (r *ReplaceHeaderRuleResource) ImportState(ctx context.Context, req resourc
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

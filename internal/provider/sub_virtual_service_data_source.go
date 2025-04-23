@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -28,8 +29,8 @@ type SubVirtualServiceDataSource struct {
 }
 
 type SubVirtualServiceDataSourceModel struct {
-	Id               types.Int32  `tfsdk:"id"`
-	VirtualServiceId types.Int32  `tfsdk:"virtual_service_id"`
+	Id               types.String `tfsdk:"id"`
+	VirtualServiceId types.String `tfsdk:"virtual_service_id"`
 	Nickname         types.String `tfsdk:"nickname"`
 	Type             types.String `tfsdk:"type"`
 }
@@ -43,11 +44,11 @@ func (d *SubVirtualServiceDataSource) Schema(ctx context.Context, req datasource
 		MarkdownDescription: "Use this data source to retrieve information about a sub virtual service.",
 
 		Attributes: map[string]schema.Attribute{
-			"id": schema.Int32Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The sub virtual service id. This is also called `Index` in the LoadMaster API.",
 				Required:            true,
 			},
-			"virtual_service_id": schema.Int32Attribute{
+			"virtual_service_id": schema.StringAttribute{
 				MarkdownDescription: "The id of the virtual service. This is also called `Index` in the LoadMaster API.",
 				Computed:            true,
 			},
@@ -92,7 +93,7 @@ func (d *SubVirtualServiceDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	id := int(data.Id.ValueInt32())
+	id := data.Id.ValueString()
 	response, err := d.client.ShowVirtualService(id)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
@@ -102,10 +103,10 @@ func (d *SubVirtualServiceDataSource) Read(ctx context.Context, req datasource.R
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Type = types.StringValue(response.VSType)
 	data.Nickname = types.StringValue(response.NickName)
-	data.VirtualServiceId = types.Int32Value(int32(response.MasterVSID))
+	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(response.MasterVSID)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

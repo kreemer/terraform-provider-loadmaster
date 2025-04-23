@@ -101,9 +101,9 @@ func (r *DeleteHeaderRuleResource) Create(ctx context.Context, req resource.Crea
 	tflog.Debug(ctx, "creating a resource")
 
 	response, err := r.client.AddRule("2", data.Id.ValueString(), api.GeneralRule{
-		Pattern:      data.Header.ValueString(),
-		Onlyonflag:   int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag: int(data.OnlyOnNoFlag.ValueInt32()),
+		Pattern:      data.Header.ValueStringPointer(),
+		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
 	})
 
 	if err != nil {
@@ -116,8 +116,8 @@ func (r *DeleteHeaderRuleResource) Create(ctx context.Context, req resource.Crea
 	rule := response.DeleteHeaderRules[len(response.DeleteHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringValue(rule.Pattern)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	tflog.Trace(ctx, "created a resource delete header rule")
 
@@ -149,8 +149,8 @@ func (r *DeleteHeaderRuleResource) Read(ctx context.Context, req resource.ReadRe
 	rule := response.DeleteHeaderRules[len(response.DeleteHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringValue(rule.Pattern)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -161,9 +161,9 @@ func (r *DeleteHeaderRuleResource) Update(ctx context.Context, req resource.Upda
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	response, err := r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
-		Pattern:      data.Header.ValueString(),
-		Onlyonflag:   int(data.OnlyOnFlag.ValueInt32()),
-		Onlyonnoflag: int(data.OnlyOnNoFlag.ValueInt32()),
+		Pattern:      data.Header.ValueStringPointer(),
+		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update delete header rule, got error: %s", err))
@@ -179,8 +179,8 @@ func (r *DeleteHeaderRuleResource) Update(ctx context.Context, req resource.Upda
 	rule := response.DeleteHeaderRules[len(response.DeleteHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringValue(rule.Pattern)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -219,8 +219,8 @@ func (r *DeleteHeaderRuleResource) ImportState(ctx context.Context, req resource
 	rule := response.DeleteHeaderRules[len(response.DeleteHeaderRules)-1]
 	data.Id = types.StringValue(rule.Name)
 	data.Header = types.StringValue(rule.Pattern)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

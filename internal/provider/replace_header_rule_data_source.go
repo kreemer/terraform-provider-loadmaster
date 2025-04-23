@@ -115,8 +115,8 @@ func (d *ReplaceHeaderRuleDataSource) Read(ctx context.Context, req datasource.R
 	data.Header = types.StringPointerValue(rule.Header)
 	data.Pattern = types.StringValue(rule.Pattern)
 	data.Replacement = types.StringValue(rule.Replacement)
-	data.OnlyOnFlag = types.Int32Value(int32(rule.Onlyonflag))
-	data.OnlyOnNoFlag = types.Int32Value(int32(rule.Onlyonnoflag))
+	data.OnlyOnFlag = types.Int32PointerValue(rule.OnlyOnFlag)
+	data.OnlyOnNoFlag = types.Int32PointerValue(rule.OnlyOnNoFlag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

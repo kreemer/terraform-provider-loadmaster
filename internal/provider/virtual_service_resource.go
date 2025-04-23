@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,7 +29,7 @@ type VirtualServiceResource struct {
 }
 
 type VirtualServiceResourceModel struct {
-	Id       types.Int32  `tfsdk:"id"`
+	Id       types.String `tfsdk:"id"`
 	Address  types.String `tfsdk:"address"`
 	Port     types.String `tfsdk:"port"`
 	Protocol types.String `tfsdk:"protocol"`
@@ -48,11 +47,11 @@ func (r *VirtualServiceResource) Schema(ctx context.Context, req resource.Schema
 		MarkdownDescription: "Manages a virtual service.",
 
 		Attributes: map[string]schema.Attribute{
-			"id": schema.Int32Attribute{
+			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Identifier of the virtual service. This is also called `Index` in the LoadMaster API.",
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"address": schema.StringAttribute{
@@ -142,7 +141,7 @@ func (r *VirtualServiceResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
@@ -164,8 +163,7 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	id := int(data.Id.ValueInt32())
-	response, err := r.client.ShowVirtualService(id)
+	response, err := r.client.ShowVirtualService(data.Id.ValueString())
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
 			resp.State.RemoveResource(ctx)
@@ -178,7 +176,7 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
@@ -194,7 +192,7 @@ func (r *VirtualServiceResource) Update(ctx context.Context, req resource.Update
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	id := int(data.Id.ValueInt32())
+	id := data.Id.ValueString()
 	response, err := r.client.ModifyVirtualService(id, api.VirtualServiceParameters{
 		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 			NickName: data.Nickname.ValueString(),
@@ -209,7 +207,7 @@ func (r *VirtualServiceResource) Update(ctx context.Context, req resource.Update
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)
@@ -229,7 +227,7 @@ func (r *VirtualServiceResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	id := int(data.Id.ValueInt32())
+	id := data.Id.ValueString()
 	_, err := r.client.DeleteVirtualService(id)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete virtual service, got error: %s", err))
@@ -240,11 +238,7 @@ func (r *VirtualServiceResource) Delete(ctx context.Context, req resource.Delete
 func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data VirtualServiceResourceModel
 
-	id, err := strconv.Atoi(req.ID)
-	if err != nil {
-		resp.Diagnostics.AddError("Invalid ID", fmt.Sprintf("Unable to convert ID to integer: %s", err))
-		return
-	}
+	id := req.ID
 
 	response, err := r.client.ShowVirtualService(id)
 	if err != nil {
@@ -259,7 +253,7 @@ func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.I
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)

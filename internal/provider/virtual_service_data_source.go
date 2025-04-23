@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -28,7 +29,7 @@ type VirtualServiceDataSource struct {
 }
 
 type VirtualServiceDataSourceModel struct {
-	Id       types.Int32  `tfsdk:"id"`
+	Id       types.String `tfsdk:"id"`
 	Address  types.String `tfsdk:"address"`
 	Port     types.String `tfsdk:"port"`
 	Protocol types.String `tfsdk:"protocol"`
@@ -47,7 +48,7 @@ func (d *VirtualServiceDataSource) Schema(ctx context.Context, req datasource.Sc
 		MarkdownDescription: "Use this data source to retrieve information about a virtual service.",
 
 		Attributes: map[string]schema.Attribute{
-			"id": schema.Int32Attribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "The virtual service id. This is also called `Index` in the LoadMaster API.",
 				Required:            true,
 			},
@@ -108,7 +109,7 @@ func (d *VirtualServiceDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	id := int(data.Id.ValueInt32())
+	id := data.Id.ValueString()
 	response, err := d.client.ShowVirtualService(id)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
@@ -118,7 +119,7 @@ func (d *VirtualServiceDataSource) Read(ctx context.Context, req datasource.Read
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	data.Id = types.Int32Value(int32(response.Index))
+	data.Id = types.StringValue(strconv.Itoa(int(response.Index)))
 	data.Address = types.StringValue(response.Address)
 	data.Port = types.StringValue(response.Port)
 	data.Protocol = types.StringValue(response.Protocol)

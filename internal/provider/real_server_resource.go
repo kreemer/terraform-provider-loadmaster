@@ -150,12 +150,12 @@ func (r *RealServerResource) Create(ctx context.Context, req resource.CreateRequ
 	tflog.Debug(ctx, "creating a resource")
 
 	response, err := r.client.AddRealServer(data.VirtualServiceId.String(), data.Address.ValueString(), data.Port.String(), api.RealServerParameters{
-		Weight:   int(data.Weight.ValueInt32()),
+		Weight:   data.Weight.ValueInt32(),
 		Forward:  data.Forward.ValueString(),
-		Enable:   bool2ptr(data.Enable.ValueBool()),
-		Limit:    int(data.Limit.ValueInt32()),
-		Critical: bool2ptr(data.Critical.ValueBool()),
-		Follow:   int(data.Follow.ValueInt32()),
+		Enable:   data.Enable.ValueBoolPointer(),
+		Limit:    data.Limit.ValueInt32(),
+		Critical: data.Critical.ValueBoolPointer(),
+		Follow:   data.Follow.ValueInt32(),
 	})
 
 	if err != nil {
@@ -227,12 +227,12 @@ func (r *RealServerResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	response, err := r.client.ModifyRealServer(data.VirtualServiceId.String(), "!"+data.Id.String(), api.RealServerParameters{
-		Weight:   int(data.Weight.ValueInt32()),
+		Weight:   data.Weight.ValueInt32(),
 		Forward:  data.Forward.ValueString(),
-		Enable:   bool2ptr(data.Enable.ValueBool()),
-		Limit:    int(data.Limit.ValueInt32()),
-		Critical: bool2ptr(data.Critical.ValueBool()),
-		Follow:   int(data.Follow.ValueInt32()),
+		Enable:   data.Enable.ValueBoolPointer(),
+		Limit:    data.Limit.ValueInt32(),
+		Critical: data.Critical.ValueBoolPointer(),
+		Follow:   data.Follow.ValueInt32(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update real server, got error: %s", err))
