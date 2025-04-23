@@ -214,7 +214,7 @@ func (r *SubVirtualServiceResource) Delete(ctx context.Context, req resource.Del
 func (r *SubVirtualServiceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data SubVirtualServiceResourceModel
 
-	id := data.Id.ValueString()
+	id := req.ID
 
 	response, err := r.client.ShowSubVirtualService(id)
 	if err != nil {

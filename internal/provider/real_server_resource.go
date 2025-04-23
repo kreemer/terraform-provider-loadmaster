@@ -34,7 +34,7 @@ type RealServerResourceModel struct {
 	Id               types.Int32  `tfsdk:"id"`
 	VirtualServiceId types.String `tfsdk:"virtual_service_id"`
 	Address          types.String `tfsdk:"address"`
-	Port             types.Int32  `tfsdk:"port"`
+	Port             types.String `tfsdk:"port"`
 	Weight           types.Int32  `tfsdk:"weight"`
 	Forward          types.String `tfsdk:"forward"`
 	Enable           types.Bool   `tfsdk:"enable"`
@@ -74,11 +74,11 @@ func (r *RealServerResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"port": schema.Int32Attribute{
+			"port": schema.StringAttribute{
 				MarkdownDescription: "The port of the real server.",
 				Required:            true,
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"weight": schema.Int32Attribute{
@@ -150,7 +150,7 @@ func (r *RealServerResource) Create(ctx context.Context, req resource.CreateRequ
 	ctx = tflog.SetField(ctx, "virtual_service_id", data.VirtualServiceId)
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddRealServer(data.VirtualServiceId.String(), data.Address.ValueString(), data.Port.String(), api.RealServerParameters{
+	response, err := r.client.AddRealServer(data.VirtualServiceId.ValueString(), data.Address.ValueString(), data.Port.ValueString(), api.RealServerParameters{
 		Weight:   data.Weight.ValueInt32(),
 		Forward:  data.Forward.ValueString(),
 		Enable:   data.Enable.ValueBoolPointer(),
@@ -170,7 +170,7 @@ func (r *RealServerResource) Create(ctx context.Context, req resource.CreateRequ
 	data.Id = types.Int32Value(real_server_response.RsIndex)
 	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(real_server_response.Port)
+	data.Port = types.StringValue(strconv.Itoa(int(real_server_response.Port)))
 	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
 	data.Enable = types.BoolPointerValue(real_server_response.Enable)
@@ -193,7 +193,7 @@ func (r *RealServerResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	response, err := r.client.ShowRealServer(data.VirtualServiceId.String(), "!"+data.Id.String())
+	response, err := r.client.ShowRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
 			resp.State.RemoveResource(ctx)
@@ -210,7 +210,7 @@ func (r *RealServerResource) Read(ctx context.Context, req resource.ReadRequest,
 	data.Id = types.Int32Value(real_server_response.RsIndex)
 	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(real_server_response.Port)
+	data.Port = types.StringValue(strconv.Itoa(int(real_server_response.Port)))
 	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
 	data.Enable = types.BoolPointerValue(real_server_response.Enable)
@@ -227,7 +227,7 @@ func (r *RealServerResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	response, err := r.client.ModifyRealServer(data.VirtualServiceId.String(), "!"+data.Id.String(), api.RealServerParameters{
+	response, err := r.client.ModifyRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())), api.RealServerParameters{
 		Weight:   data.Weight.ValueInt32(),
 		Forward:  data.Forward.ValueString(),
 		Enable:   data.Enable.ValueBoolPointer(),
@@ -250,7 +250,7 @@ func (r *RealServerResource) Update(ctx context.Context, req resource.UpdateRequ
 	data.Id = types.Int32Value(real_server_response.RsIndex)
 	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(real_server_response.Port)
+	data.Port = types.StringValue(strconv.Itoa(int(real_server_response.Port)))
 	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
 	data.Enable = types.BoolPointerValue(real_server_response.Enable)
@@ -271,7 +271,7 @@ func (r *RealServerResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	_, err := r.client.DeleteRealServer(data.VirtualServiceId.String(), "!"+data.Id.String())
+	_, err := r.client.DeleteRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete real server, got error: %s", err))
 		return
@@ -303,7 +303,7 @@ func (r *RealServerResource) ImportState(ctx context.Context, req resource.Impor
 	data.Id = types.Int32Value(real_server_response.RsIndex)
 	data.VirtualServiceId = types.StringValue(strconv.Itoa(int(real_server_response.VSIndex)))
 	data.Address = types.StringValue(real_server_response.Address)
-	data.Port = types.Int32Value(real_server_response.Port)
+	data.Port = types.StringValue(strconv.Itoa(int(real_server_response.Port)))
 	data.Weight = types.Int32Value(real_server_response.Weight)
 	data.Forward = types.StringValue(real_server_response.Forward)
 	data.Enable = types.BoolPointerValue(real_server_response.Enable)

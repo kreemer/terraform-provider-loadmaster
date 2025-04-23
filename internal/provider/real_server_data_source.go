@@ -128,7 +128,7 @@ func (d *RealServerDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := d.client.ShowRealServer(data.VirtualServiceId.String(), "!"+data.Id.String())
+	response, err := d.client.ShowRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read real server, got error: %s", err))
 		return
