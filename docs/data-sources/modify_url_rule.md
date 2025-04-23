@@ -1,6 +1,6 @@
 ---
 page_title: "loadmaster_modify_url_rule Data Source - loadmaster"
-subcategory: "Rules"
+subcategory: "Rule"
 description: |-
   Use this data source to retrieve information about a modify url rule.
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "loadmaster_replace_body_rule Data Source - loadmaster"
-subcategory: "Rules"
+subcategory: "Rule"
 description: |-
   Use this data source to retrieve information about a replace body rule.
 ---

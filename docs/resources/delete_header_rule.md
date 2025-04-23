@@ -1,6 +1,6 @@
 ---
 page_title: "loadmaster_delete_header_rule Resource - loadmaster"
-subcategory: "Rules"
+subcategory: "Rule"
 description: |-
   Manages a DeleteHeaderRule.
 ---

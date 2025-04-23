@@ -1,6 +1,6 @@
 ---
 page_title: "loadmaster_replace_body_rule Resource - loadmaster"
-subcategory: "Rules"
+subcategory: "Rule"
 description: |-
   Manages a ReplaceBodyRule.
 ---

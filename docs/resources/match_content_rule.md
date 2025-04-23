@@ -1,6 +1,6 @@
 ---
 page_title: "loadmaster_match_content_rule Resource - loadmaster"
-subcategory: "Rules"
+subcategory: "Rule"
 description: |-
   Manages a MatchContentRule.
 ---
