@@ -32,7 +32,7 @@ resource "loadmaster_real_server" "test" {
 ### Required
 
 - `address` (String) The address of the real server. Should be an IP address.
-- `port` (Number) The port of the real server.
+- `port` (String) The port of the real server.
 - `virtual_service_id` (String) The id of the virtual service. This is also called `VIndex` in the LoadMaster API.
 
 ### Optional
