@@ -19,8 +19,8 @@ import (
 	"github.com/kreemer/loadmaster-go-client/api"
 )
 
-var _ resource.Resource = &ModifyUrlRuleResource{}
-var _ resource.ResourceWithImportState = &ModifyUrlRuleResource{}
+var _ resource.Resource = &OwaspCustomDataResource{}
+var _ resource.ResourceWithImportState = &OwaspCustomDataResource{}
 
 func NewOwaspCustomDataResource() resource.Resource {
 	return &OwaspCustomDataResource{}

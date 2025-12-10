@@ -190,6 +190,7 @@ func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Re
 		NewReplaceBodyRuleResource,
 		NewOwaspCustomRuleResource,
 		NewOwaspCustomDataResource,
+		NewVirtualServiceOwaspRuleResource,
 	}
 }
 

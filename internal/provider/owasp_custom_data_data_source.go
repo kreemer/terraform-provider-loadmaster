@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &ModifyUrlRuleDataSource{}
-	_ datasource.DataSourceWithConfigure = &ModifyUrlRuleDataSource{}
+	_ datasource.DataSource              = &OwaspCustomDataDataSource{}
+	_ datasource.DataSourceWithConfigure = &OwaspCustomDataDataSource{}
 )
 
 func NewOwaspCustomDataDataSource() datasource.DataSource {
