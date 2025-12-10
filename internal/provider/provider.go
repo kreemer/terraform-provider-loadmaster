@@ -189,6 +189,7 @@ func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Re
 		NewModifyUrlRuleResource,
 		NewReplaceBodyRuleResource,
 		NewOwaspCustomRuleResource,
+		NewOwaspCustomDataResource,
 	}
 }
 
@@ -208,6 +209,7 @@ func (p *LoadMasterProvider) DataSources(ctx context.Context) []func() datasourc
 		NewModifyUrlRuleDataSource,
 		NewReplaceBodyRuleDataSource,
 		NewOwaspCustomRuleDataSource,
+		NewOwaspCustomDataDataSource,
 	}
 }
 
