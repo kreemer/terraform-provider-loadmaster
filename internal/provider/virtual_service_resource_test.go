@@ -130,7 +130,7 @@ func testVirtualServiceResourceConfigDisabled() string {
 	return `
 resource "loadmaster_virtual_service" "test2" {
   address = "10.0.0.4"
-  port = "9090"
+  port = "9091"
   protocol = "tcp"
   type = "http"
   enabled = false
