@@ -143,7 +143,7 @@ EOT
 
 resource "loadmaster_virtual_service" "test" {
   address = "10.0.0.4"
-  port = "9888"
+  port = "9090"
   protocol = "tcp"
 }
 
@@ -228,7 +228,7 @@ EOT
 
 resource "loadmaster_virtual_service" "test" {
   address = "10.0.0.4"
-  port = "9888"
+  port = "9090"
   protocol = "tcp"
 }
 
