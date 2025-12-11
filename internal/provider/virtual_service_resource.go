@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -126,13 +127,16 @@ func (r *VirtualServiceResource) Create(ctx context.Context, req resource.Create
 	ctx = tflog.SetField(ctx, "protocol", data.Protocol)
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddVirtualService(data.Address.ValueString(), data.Port.ValueString(), data.Protocol.ValueString(), api.VirtualServiceParameters{
-		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
-			NickName: data.Nickname.ValueString(),
-			VSType:   data.Type.ValueString(),
-			Enable:   bool2ptr(data.Enabled.ValueBool()),
-		},
+	operation := ClientBackoff(func() (*api.AddVirtualServiceResponse, error) {
+		return r.client.AddVirtualService(data.Address.ValueString(), data.Port.ValueString(), data.Protocol.ValueString(), api.VirtualServiceParameters{
+			VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
+				NickName: data.Nickname.ValueString(),
+				VSType:   data.Type.ValueString(),
+				Enable:   bool2ptr(data.Enabled.ValueBool()),
+			},
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
@@ -163,7 +167,10 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	response, err := r.client.ShowVirtualService(data.Id.ValueString())
+	operation := ClientBackoff(func() (*api.ShowVirtualServiceResponse, error) {
+		return r.client.ShowVirtualService(data.Id.ValueString())
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
 			resp.State.RemoveResource(ctx)
@@ -193,13 +200,17 @@ func (r *VirtualServiceResource) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	id := data.Id.ValueString()
-	response, err := r.client.ModifyVirtualService(id, api.VirtualServiceParameters{
-		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
-			NickName: data.Nickname.ValueString(),
-			VSType:   data.Type.ValueString(),
-			Enable:   bool2ptr(data.Enabled.ValueBool()),
-		},
+	operation := ClientBackoff(func() (*api.ModifyVirtualServiceResponse, error) {
+		return r.client.ModifyVirtualService(id, api.VirtualServiceParameters{
+			VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
+				NickName: data.Nickname.ValueString(),
+				VSType:   data.Type.ValueString(),
+				Enable:   bool2ptr(data.Enabled.ValueBool()),
+			},
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
+
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
 		return
@@ -228,7 +239,10 @@ func (r *VirtualServiceResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	id := data.Id.ValueString()
-	_, err := r.client.DeleteVirtualService(id)
+	operation := ClientBackoff(func() (*api.DeleteVirtualServiceResponse, error) {
+		return r.client.DeleteVirtualService(id)
+	})
+	_, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete virtual service, got error: %s", err))
 		return
@@ -240,7 +254,11 @@ func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.I
 
 	id := req.ID
 
-	response, err := r.client.ShowVirtualService(id)
+	operation := ClientBackoff(func() (*api.ShowVirtualServiceResponse, error) {
+		return r.client.ShowVirtualService(id)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
+
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
 		return

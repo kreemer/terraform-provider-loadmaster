@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -147,19 +148,22 @@ func (r *MatchContentRuleResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddRule("0", data.Id.ValueString(), api.GeneralRule{
-		Header:       data.Header.ValueStringPointer(),
-		Pattern:      data.Pattern.ValueStringPointer(),
-		MatchType:    data.MatchType.ValueStringPointer(),
-		IncHost:      data.IncHost.ValueBoolPointer(),
-		NoCase:       data.IncHost.ValueBoolPointer(),
-		Negate:       data.IncHost.ValueBoolPointer(),
-		IncQuery:     data.IncHost.ValueBoolPointer(),
-		SetOnMatch:   data.SetOnMatch.ValueInt32Pointer(),
-		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
-		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
-		MustFail:     data.IncHost.ValueBoolPointer(),
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return r.client.AddRule("0", data.Id.ValueString(), api.GeneralRule{
+			Header:       data.Header.ValueStringPointer(),
+			Pattern:      data.Pattern.ValueStringPointer(),
+			MatchType:    data.MatchType.ValueStringPointer(),
+			IncHost:      data.IncHost.ValueBoolPointer(),
+			NoCase:       data.IncHost.ValueBoolPointer(),
+			Negate:       data.IncHost.ValueBoolPointer(),
+			IncQuery:     data.IncHost.ValueBoolPointer(),
+			SetOnMatch:   data.SetOnMatch.ValueInt32Pointer(),
+			OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+			OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
+			MustFail:     data.IncHost.ValueBoolPointer(),
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create match content rule, got error: %s", err))
@@ -196,7 +200,10 @@ func (r *MatchContentRuleResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	response, err := r.client.ShowRule(data.Id.ValueString())
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return r.client.ShowRule(data.Id.ValueString())
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Rule not found" {
 			resp.State.RemoveResource(ctx)
@@ -231,19 +238,23 @@ func (r *MatchContentRuleResource) Update(ctx context.Context, req resource.Upda
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	response, err := r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
-		Header:       data.Header.ValueStringPointer(),
-		Pattern:      data.Pattern.ValueStringPointer(),
-		MatchType:    data.MatchType.ValueStringPointer(),
-		IncHost:      data.IncHost.ValueBoolPointer(),
-		NoCase:       data.IncHost.ValueBoolPointer(),
-		Negate:       data.IncHost.ValueBoolPointer(),
-		IncQuery:     data.IncHost.ValueBoolPointer(),
-		SetOnMatch:   data.SetOnMatch.ValueInt32Pointer(),
-		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
-		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
-		MustFail:     data.IncHost.ValueBoolPointer(),
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
+			Header:       data.Header.ValueStringPointer(),
+			Pattern:      data.Pattern.ValueStringPointer(),
+			MatchType:    data.MatchType.ValueStringPointer(),
+			IncHost:      data.IncHost.ValueBoolPointer(),
+			NoCase:       data.IncHost.ValueBoolPointer(),
+			Negate:       data.IncHost.ValueBoolPointer(),
+			IncQuery:     data.IncHost.ValueBoolPointer(),
+			SetOnMatch:   data.SetOnMatch.ValueInt32Pointer(),
+			OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+			OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
+			MustFail:     data.IncHost.ValueBoolPointer(),
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
+
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update match content rule, got error: %s", err))
 	}
@@ -281,7 +292,10 @@ func (r *MatchContentRuleResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	_, err := r.client.DeleteRule(data.Id.ValueString())
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return r.client.DeleteRule(data.Id.ValueString())
+	})
+	_, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rule, got error: %s", err))
 		return
@@ -291,7 +305,10 @@ func (r *MatchContentRuleResource) Delete(ctx context.Context, req resource.Dele
 func (r *MatchContentRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data MatchContentRuleResourceModel
 
-	response, err := r.client.ShowRule(req.ID)
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return r.client.ShowRule(req.ID)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read match content rule for import, got error: %s", err))
 	}

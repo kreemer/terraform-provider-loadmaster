@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -94,7 +95,11 @@ func (d *SubVirtualServiceDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	id := data.Id.ValueString()
-	response, err := d.client.ShowVirtualService(id)
+
+	operation := ClientBackoff(func() (*api.ShowSubVirtualServiceResponse, error) {
+		return d.client.ShowSubVirtualService(id)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
 		return

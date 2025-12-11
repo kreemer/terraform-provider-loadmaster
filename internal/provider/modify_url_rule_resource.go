@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -102,12 +103,15 @@ func (r *ModifyUrlRuleResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddRule("4", data.Id.ValueString(), api.GeneralRule{
-		Pattern:      data.Pattern.ValueStringPointer(),
-		Replacement:  data.Replacement.ValueStringPointer(),
-		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
-		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return r.client.AddRule("4", data.Id.ValueString(), api.GeneralRule{
+			Pattern:      data.Pattern.ValueStringPointer(),
+			Replacement:  data.Replacement.ValueStringPointer(),
+			OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+			OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create modify url rule, got error: %s", err))
@@ -137,7 +141,10 @@ func (r *ModifyUrlRuleResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	response, err := r.client.ShowRule(data.Id.ValueString())
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return r.client.ShowRule(data.Id.ValueString())
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Rule not found" {
 			resp.State.RemoveResource(ctx)
@@ -165,12 +172,15 @@ func (r *ModifyUrlRuleResource) Update(ctx context.Context, req resource.UpdateR
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	response, err := r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
-		Pattern:      data.Pattern.ValueStringPointer(),
-		Replacement:  data.Replacement.ValueStringPointer(),
-		OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
-		OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return r.client.ModifyRule(data.Id.ValueString(), api.GeneralRule{
+			Pattern:      data.Pattern.ValueStringPointer(),
+			Replacement:  data.Replacement.ValueStringPointer(),
+			OnlyOnFlag:   data.OnlyOnFlag.ValueInt32Pointer(),
+			OnlyOnNoFlag: data.OnlyOnNoFlag.ValueInt32Pointer(),
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update modify url rule, got error: %s", err))
 	}
@@ -201,7 +211,10 @@ func (r *ModifyUrlRuleResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	_, err := r.client.DeleteRule(data.Id.ValueString())
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return r.client.DeleteRule(data.Id.ValueString())
+	})
+	_, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rule, got error: %s", err))
 		return
@@ -211,7 +224,10 @@ func (r *ModifyUrlRuleResource) Delete(ctx context.Context, req resource.DeleteR
 func (r *ModifyUrlRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data ModifyUrlRuleResourceModel
 
-	response, err := r.client.ShowRule(req.ID)
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return r.client.ShowRule(req.ID)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read modify url rule for import, got error: %s", err))
 	}

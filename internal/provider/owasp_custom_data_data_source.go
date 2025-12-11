@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -41,14 +42,14 @@ func (d *OwaspCustomDataDataSource) Metadata(ctx context.Context, req datasource
 
 func (d *OwaspCustomDataDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Use this data source to retrieve information about a owasp custom rule.",
+		MarkdownDescription: "Use this data source to retrieve information about a owasp custom data.",
 		Attributes: map[string]schema.Attribute{
 			"filename": schema.StringAttribute{
-				MarkdownDescription: "Identifier of the rule.",
+				MarkdownDescription: "Identifier of the data.",
 				Required:            true,
 			},
 			"data": schema.StringAttribute{
-				MarkdownDescription: "The data of the custom rule.",
+				MarkdownDescription: "The content of the custom data.",
 				Computed:            true,
 			},
 		},
@@ -84,9 +85,12 @@ func (d *OwaspCustomDataDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	response, err := d.client.ShowOwaspCustomData(data.Filename.ValueString())
+	operation := ClientBackoff(func() (*api.LoadMasterDataResponse, error) {
+		return d.client.ShowOwaspCustomData(data.Filename.ValueString())
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read replace content rule, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read owasp custom data, got error: %s", err))
 		return
 	}
 

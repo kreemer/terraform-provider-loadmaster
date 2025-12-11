@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -48,7 +49,7 @@ func (d *OwaspCustomRuleDataSource) Schema(ctx context.Context, req datasource.S
 				Required:            true,
 			},
 			"data": schema.StringAttribute{
-				MarkdownDescription: "The data of the custom rule.",
+				MarkdownDescription: "The content of the custom rule.",
 				Computed:            true,
 			},
 		},
@@ -84,9 +85,12 @@ func (d *OwaspCustomRuleDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	response, err := d.client.ShowOwaspCustomRule(data.Filename.ValueString())
+	operation := ClientBackoff(func() (*api.LoadMasterDataResponse, error) {
+		return d.client.ShowOwaspCustomRule(data.Filename.ValueString())
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read replace content rule, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read owasp custom rule, got error: %s", err))
 		return
 	}
 

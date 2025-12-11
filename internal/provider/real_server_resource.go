@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
@@ -150,14 +151,17 @@ func (r *RealServerResource) Create(ctx context.Context, req resource.CreateRequ
 	ctx = tflog.SetField(ctx, "virtual_service_id", data.VirtualServiceId)
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddRealServer(data.VirtualServiceId.ValueString(), data.Address.ValueString(), data.Port.ValueString(), api.RealServerParameters{
-		Weight:   data.Weight.ValueInt32(),
-		Forward:  data.Forward.ValueString(),
-		Enable:   data.Enable.ValueBoolPointer(),
-		Limit:    data.Limit.ValueInt32(),
-		Critical: data.Critical.ValueBoolPointer(),
-		Follow:   data.Follow.ValueInt32(),
+	operation := ClientBackoff(func() (*api.ListRealServerResponse, error) {
+		return r.client.AddRealServer(data.VirtualServiceId.ValueString(), data.Address.ValueString(), data.Port.ValueString(), api.RealServerParameters{
+			Weight:   data.Weight.ValueInt32(),
+			Forward:  data.Forward.ValueString(),
+			Enable:   data.Enable.ValueBoolPointer(),
+			Limit:    data.Limit.ValueInt32(),
+			Critical: data.Critical.ValueBoolPointer(),
+			Follow:   data.Follow.ValueInt32(),
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create real server, got error: %s", err))
@@ -193,7 +197,10 @@ func (r *RealServerResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	response, err := r.client.ShowRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
+	operation := ClientBackoff(func() (*api.ListRealServerResponse, error) {
+		return r.client.ShowRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
 			resp.State.RemoveResource(ctx)
@@ -227,14 +234,17 @@ func (r *RealServerResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
-	response, err := r.client.ModifyRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())), api.RealServerParameters{
-		Weight:   data.Weight.ValueInt32(),
-		Forward:  data.Forward.ValueString(),
-		Enable:   data.Enable.ValueBoolPointer(),
-		Limit:    data.Limit.ValueInt32(),
-		Critical: data.Critical.ValueBoolPointer(),
-		Follow:   data.Follow.ValueInt32(),
+	operation := ClientBackoff(func() (*api.ListRealServerResponse, error) {
+		return r.client.ModifyRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())), api.RealServerParameters{
+			Weight:   data.Weight.ValueInt32(),
+			Forward:  data.Forward.ValueString(),
+			Enable:   data.Enable.ValueBoolPointer(),
+			Limit:    data.Limit.ValueInt32(),
+			Critical: data.Critical.ValueBoolPointer(),
+			Follow:   data.Follow.ValueInt32(),
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update real server, got error: %s", err))
 	}
@@ -271,7 +281,10 @@ func (r *RealServerResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	_, err := r.client.DeleteRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
+	operation := ClientBackoff(func() (*api.ListRealServerResponse, error) {
+		return r.client.DeleteRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
+	})
+	_, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete real server, got error: %s", err))
 		return
@@ -288,7 +301,10 @@ func (r *RealServerResource) ImportState(ctx context.Context, req resource.Impor
 		return
 	}
 
-	response, err := r.client.ShowRealServer(id_list[0], "!"+id_list[1])
+	operation := ClientBackoff(func() (*api.ListRealServerResponse, error) {
+		return r.client.ShowRealServer(id_list[0], "!"+id_list[1])
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read real server for import, got error: %s", err))
 	}

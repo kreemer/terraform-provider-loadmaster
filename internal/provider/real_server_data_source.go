@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -128,7 +129,11 @@ func (d *RealServerDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := d.client.ShowRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
+
+	operation := ClientBackoff(func() (*api.ListRealServerResponse, error) {
+		return d.client.ShowRealServer(data.VirtualServiceId.ValueString(), "!"+strconv.Itoa(int(data.Id.ValueInt32())))
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read real server, got error: %s", err))
 		return

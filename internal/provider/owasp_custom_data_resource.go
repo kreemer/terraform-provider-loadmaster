@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -45,7 +46,7 @@ func (r *OwaspCustomDataResource) Metadata(ctx context.Context, req resource.Met
 
 func (r *OwaspCustomDataResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages a `OwaspCustomData`.",
+		MarkdownDescription: "Manages a `OwaspCustomData`.\n\nBeware: The LoadMaster API base64 encodes the data and returns this format only if there exists a multibyte character. This resource places a marker line in every resource to ensure consistent behavior.",
 
 		Attributes: map[string]schema.Attribute{
 			"filename": schema.StringAttribute{
@@ -57,7 +58,7 @@ func (r *OwaspCustomDataResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"data": schema.StringAttribute{
-				MarkdownDescription: "The replacement string.",
+				MarkdownDescription: "The content of the custom data.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -98,7 +99,11 @@ func (r *OwaspCustomDataResource) Create(ctx context.Context, req resource.Creat
 
 	// Decoding shenanigans
 	content := base64.StdEncoding.EncodeToString([]byte(r.getMarker() + data.Data.ValueString()))
-	response, err := r.client.AddOwaspCustomData(data.Filename.ValueString(), content)
+
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return r.client.AddOwaspCustomData(data.Filename.ValueString(), content)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create owasp custom data, got error: %s", err))
@@ -124,7 +129,10 @@ func (r *OwaspCustomDataResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	response, err := r.client.ShowOwaspCustomData(data.Filename.ValueString())
+	operation := ClientBackoff(func() (*api.LoadMasterDataResponse, error) {
+		return r.client.ShowOwaspCustomData(data.Filename.ValueString())
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown Datafile" {
 			resp.State.RemoveResource(ctx)
@@ -169,9 +177,12 @@ func (r *OwaspCustomDataResource) Delete(ctx context.Context, req resource.Delet
 
 	filename := strings.TrimSuffix(data.Filename.ValueString(), filepath.Ext(data.Filename.ValueString()))
 
-	_, err := r.client.DeleteOwaspCustomData(filename)
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return r.client.DeleteOwaspCustomData(filename)
+	})
+	_, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rule, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete owasp custom data, got error: %s", err))
 		return
 	}
 }
@@ -179,7 +190,10 @@ func (r *OwaspCustomDataResource) Delete(ctx context.Context, req resource.Delet
 func (r *OwaspCustomDataResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data OwaspCustomDataResourceModel
 
-	response, err := r.client.ShowOwaspCustomData(req.ID)
+	operation := ClientBackoff(func() (*api.LoadMasterDataResponse, error) {
+		return r.client.ShowOwaspCustomData(req.ID)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read owasp custom data for import, got error: %s", err))
 	}
