@@ -3,22 +3,21 @@ page_title: "loadmaster_owasp_custom_rule Resource - loadmaster"
 subcategory: "OWASP"
 description: |-
   Manages a OwaspCustomRule.
+  Beware: The LoadMaster API base64 encodes the data and returns this format only if there exists a multibyte character. This resource places a marker line in every resource to ensure consistent behavior.
 ---
 
 # loadmaster_owasp_custom_rule (Resource)
 
 Manages a `OwaspCustomRule`.
 
+Beware: The LoadMaster API base64 encodes the data and returns this format only if there exists a multibyte character. This resource places a marker line in every resource to ensure consistent behavior.
+
 ## Example Usage
 
 ```terraform
 resource "loadmaster_owasp_custom_rule" "name" {
-  filename = "rule"
-
-  data = <<-EOT
-    # OWASP Custom Rule
-    SecRule REQUEST_HEADERS:User-Agent "BadBot" "id:12345,phase:1,deny,status:403,msg:'Bad Bot Detected'"
-    EOT
+  filename = "rule.conf"
+  data     = file("${path.module}/rule.conf")
 }
 ```
 
@@ -27,5 +26,5 @@ resource "loadmaster_owasp_custom_rule" "name" {
 
 ### Required
 
-- `data` (String) The replacement string.
+- `data` (String) The content of the custom rule.
 - `filename` (String) Identifier of the rule, should be unique for all different rules.

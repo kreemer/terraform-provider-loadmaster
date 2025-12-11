@@ -2,18 +2,18 @@
 page_title: "loadmaster_owasp_custom_data Data Source - loadmaster"
 subcategory: "OWASP"
 description: |-
-  Use this data source to retrieve information about a owasp custom rule.
+  Use this data source to retrieve information about a owasp custom data.
 ---
 
 # loadmaster_owasp_custom_data (Data Source)
 
-Use this data source to retrieve information about a owasp custom rule.
+Use this data source to retrieve information about a owasp custom data.
 
 ## Example Usage
 
 ```terraform
 data "loadmaster_owasp_custom_data" "example" {
-  filename = "file_name.txt"
+  filename = "data.txt"
 }
 ```
 
@@ -22,8 +22,8 @@ data "loadmaster_owasp_custom_data" "example" {
 
 ### Required
 
-- `filename` (String) Identifier of the rule.
+- `filename` (String) Identifier of the data.
 
 ### Read-Only
 
-- `data` (String) The data of the custom rule.
+- `data` (String) The content of the custom data.
