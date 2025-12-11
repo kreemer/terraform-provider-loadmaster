@@ -132,8 +132,16 @@ func (r *OwaspCustomDataResource) Read(ctx context.Context, req resource.ReadReq
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
+	base64Data, err := base64.StdEncoding.DecodeString(response.Data)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to decode owasp custom data, got error: %s", err))
+		return
+	}
+
+	content := strings.TrimSuffix(string(base64Data), "\r\n")
+
 	data.Filename = types.StringValue(data.Filename.ValueString())
-	data.Data = types.StringValue(response.Data)
+	data.Data = types.StringValue(content)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
