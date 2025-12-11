@@ -85,6 +85,31 @@ func TestOwaspCustomRuleResourceRealData(t *testing.T) {
 	})
 }
 
+func TestOwaspCustomRuleResourceReal2(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testRealOwaspCustomRuleWithData2(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.rule",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("librechat_acl.conf"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_data.data",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("gpustack_acl.txt"),
+					),
+				},
+			},
+		},
+	})
+}
+
 func testOwaspCustomRuleResource() string {
 	return `
 resource "loadmaster_owasp_custom_rule" "test_rule" {
@@ -184,6 +209,43 @@ resource "loadmaster_owasp_custom_rule" "rule" {
 SecMarker BEGIN_ALLOWLIST_URI
 # gpustack
 SecRule REQUEST_HEADERS:Host "@rx ^gpustack\.unibe\.ch$" "chain,id:100,phase:1,deny,t:lowercase,log,msg:'Access for IP %%{REMOTE_ADDR} is not allowed'" 
+SecRule REMOTE_ADDR "!@ipMatchFromFile gpustack_acl.txt" \
+
+SecMarker END_ALLOWLIST_URI
+EOT
+
+  depends_on = [loadmaster_owasp_custom_data.data]
+}
+
+`
+}
+
+func testRealOwaspCustomRuleWithData2() string {
+	return `
+
+resource "loadmaster_owasp_custom_data" "data" {
+  filename = "gpustack_acl.txt"
+  data = <<EOT
+# ---------------------------------------------------------------
+# List of allowed IP
+# ---------------------------------------------------------------
+
+# Universität Bern
+130.92.0.0/16
+172.16.0.0/12
+EOT
+}
+
+resource "loadmaster_owasp_custom_rule" "rule" {
+  filename = "librechat_acl.conf"
+  data = <<EOT
+# ---------------------------------------------------------------
+# ACL Check
+# ---------------------------------------------------------------
+
+SecMarker BEGIN_ALLOWLIST_URI
+# gpustack
+SecRule REQUEST_HEADERS:Host "@rx ^gpustack\.unibe\.ch$" "chain,id:100,phase:1,deny,t:lowercase,log,msg:'Accéss for IP %%{REMOTE_ADDR} is not allowed'" 
 SecRule REMOTE_ADDR "!@ipMatchFromFile gpustack_acl.txt" \
 
 SecMarker END_ALLOWLIST_URI
