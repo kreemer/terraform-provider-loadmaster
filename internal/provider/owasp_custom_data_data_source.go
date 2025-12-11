@@ -5,7 +5,10 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -87,11 +90,25 @@ func (d *OwaspCustomDataDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
+	content := ""
+	regex := regexp.MustCompile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
+	if !regex.MatchString(response.Data) {
+		content = response.Data
+	} else {
+		// Decoding shenanigans
+		content_bytes, err := base64.StdEncoding.DecodeString(response.Data)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to decode owasp custom data, got error: %s", err))
+			return
+		}
+		content = strings.TrimSuffix(strings.TrimPrefix(string(content_bytes), OwaspCustomDataResource{}.getMarker()), "\r\n")
+	}
+
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
 	data.Filename = types.StringValue(data.Filename.ValueString())
-	data.Data = types.StringValue(response.Data)
+	data.Data = types.StringValue(content)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

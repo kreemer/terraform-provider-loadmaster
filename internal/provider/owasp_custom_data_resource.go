@@ -35,6 +35,10 @@ type OwaspCustomDataResourceModel struct {
 	Data     types.String `tfsdk:"data"`
 }
 
+func (r OwaspCustomDataResource) getMarker() string {
+	return "# LoadMaster API MÄrker\n"
+}
+
 func (r *OwaspCustomDataResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_owasp_custom_data"
 }
@@ -92,7 +96,8 @@ func (r *OwaspCustomDataResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "creating a resource")
 
-	content := base64.StdEncoding.EncodeToString([]byte(data.Data.ValueString()))
+	// Decoding shenanigans
+	content := base64.StdEncoding.EncodeToString([]byte(r.getMarker() + data.Data.ValueString()))
 	response, err := r.client.AddOwaspCustomData(data.Filename.ValueString(), content)
 
 	if err != nil {
@@ -132,13 +137,13 @@ func (r *OwaspCustomDataResource) Read(ctx context.Context, req resource.ReadReq
 	tflog.SetField(ctx, "response", response)
 	tflog.Trace(ctx, "Received valid response from API")
 
-	base64Data, err := base64.StdEncoding.DecodeString(response.Data)
+	// Decoding shenanigans
+	content_bytes, err := base64.StdEncoding.DecodeString(response.Data)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to decode owasp custom data, got error: %s", err))
 		return
 	}
-
-	content := strings.TrimSuffix(string(base64Data), "\r\n")
+	content := strings.TrimSuffix(strings.TrimPrefix(string(content_bytes), r.getMarker()), "\r\n")
 
 	data.Filename = types.StringValue(data.Filename.ValueString())
 	data.Data = types.StringValue(content)
