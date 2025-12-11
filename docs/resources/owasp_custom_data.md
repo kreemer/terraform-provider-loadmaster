@@ -3,21 +3,21 @@ page_title: "loadmaster_owasp_custom_data Resource - loadmaster"
 subcategory: "OWASP"
 description: |-
   Manages a OwaspCustomData.
+  Beware: The LoadMaster API base64 encodes the data and returns this format only if there exists a multibyte character. This resource places a marker line in every resource to ensure consistent behavior.
 ---
 
 # loadmaster_owasp_custom_data (Resource)
 
 Manages a `OwaspCustomData`.
 
+Beware: The LoadMaster API base64 encodes the data and returns this format only if there exists a multibyte character. This resource places a marker line in every resource to ensure consistent behavior.
+
 ## Example Usage
 
 ```terraform
 resource "loadmaster_owasp_custom_data" "name" {
-  filename = "rule.txt"
-
-  data = <<-EOT
-    Data
-    EOT
+  filename = "data.txt"
+  data     = file("${path.module}/data.txt")
 }
 ```
 
@@ -26,5 +26,5 @@ resource "loadmaster_owasp_custom_data" "name" {
 
 ### Required
 
-- `data` (String) The replacement string.
+- `data` (String) The content of the custom data.
 - `filename` (String) Identifier of the data, should be unique for all different data.

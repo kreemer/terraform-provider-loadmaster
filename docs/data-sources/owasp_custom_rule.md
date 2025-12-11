@@ -13,7 +13,7 @@ Use this data source to retrieve information about a owasp custom rule.
 
 ```terraform
 data "loadmaster_owasp_custom_rule" "example" {
-  filename = "test_rule_replace"
+  filename = "rule.conf"
 }
 ```
 
@@ -26,4 +26,4 @@ data "loadmaster_owasp_custom_rule" "example" {
 
 ### Read-Only
 
-- `data` (String) The data of the custom rule.
+- `data` (String) The content of the custom rule.

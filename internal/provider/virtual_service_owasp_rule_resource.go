@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -53,7 +54,7 @@ func (r *VirtualServiceOwaspRuleResource) Schema(ctx context.Context, req resour
 				},
 			},
 			"rule": schema.StringAttribute{
-				MarkdownDescription: "The replacement string.",
+				MarkdownDescription: "The name of the OWASP rule to attach to the virtual service.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -100,7 +101,10 @@ func (r *VirtualServiceOwaspRuleResource) Create(ctx context.Context, req resour
 
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddVirtualServiceOwaspCustomRule(data.VirtualServiceId.ValueString(), data.Rule.ValueString(), data.RunFirst.ValueBool())
+	operation := func() (*api.LoadMasterResponse, error) {
+		return r.client.AddVirtualServiceOwaspCustomRule(data.VirtualServiceId.ValueString(), data.Rule.ValueString(), data.RunFirst.ValueBool())
+	}
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create owasp custom rule, got error: %s", err))
@@ -125,7 +129,10 @@ func (r *VirtualServiceOwaspRuleResource) Read(ctx context.Context, req resource
 		return
 	}
 
-	response, err := r.client.ShowVirtualServiceOwaspRule(data.VirtualServiceId.ValueString(), data.Rule.ValueString())
+	operation := func() (*api.OwaspRuleResponse, error) {
+		return r.client.ShowVirtualServiceOwaspRule(data.VirtualServiceId.ValueString(), data.Rule.ValueString())
+	}
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Rule not found" {
 			resp.State.RemoveResource(ctx)
@@ -160,9 +167,12 @@ func (r *VirtualServiceOwaspRuleResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	_, err := r.client.DeleteVirtualServiceOwaspCustomRule(data.VirtualServiceId.ValueString(), data.Rule.ValueString())
+	operation := func() (*api.LoadMasterResponse, error) {
+		return r.client.DeleteVirtualServiceOwaspCustomRule(data.VirtualServiceId.ValueString(), data.Rule.ValueString())
+	}
+	_, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rule, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete owasp custom rule, got error: %s", err))
 		return
 	}
 }
@@ -176,9 +186,12 @@ func (r *VirtualServiceOwaspRuleResource) ImportState(ctx context.Context, req r
 		return
 	}
 
-	response, err := r.client.ShowVirtualServiceOwaspRule(id_list[0], id_list[1])
+	operation := func() (*api.OwaspRuleResponse, error) {
+		return r.client.ShowVirtualServiceOwaspRule(id_list[0], id_list[1])
+	}
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read modify url rule for import, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read owasp custom rule for import, got error: %s", err))
 	}
 
 	if resp.Diagnostics.HasError() {

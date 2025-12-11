@@ -26,7 +26,7 @@ resource "loadmaster_virtual_service_owasp_rule" "example" {
 
 ### Required
 
-- `rule` (String) The replacement string.
+- `rule` (String) The name of the OWASP rule to attach to the virtual service.
 - `virtual_service_id` (String) Identifier of the virtual service.
 
 ### Optional

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -45,7 +46,7 @@ func (r *OwaspCustomRuleResource) Metadata(ctx context.Context, req resource.Met
 
 func (r *OwaspCustomRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages a `OwaspCustomRule`.",
+		MarkdownDescription: "Manages a `OwaspCustomRule`.\n\nBeware: The LoadMaster API base64 encodes the data and returns this format only if there exists a multibyte character. This resource places a marker line in every resource to ensure consistent behavior.",
 
 		Attributes: map[string]schema.Attribute{
 			"filename": schema.StringAttribute{
@@ -57,7 +58,7 @@ func (r *OwaspCustomRuleResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"data": schema.StringAttribute{
-				MarkdownDescription: "The replacement string.",
+				MarkdownDescription: "The content of the custom rule.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -97,7 +98,11 @@ func (r *OwaspCustomRuleResource) Create(ctx context.Context, req resource.Creat
 	tflog.Debug(ctx, "creating a resource")
 
 	content := base64.StdEncoding.EncodeToString([]byte(r.getMarker() + data.Data.ValueString()))
-	response, err := r.client.AddOwaspCustomRule(data.Filename.ValueString(), content)
+
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return r.client.AddOwaspCustomRule(data.Filename.ValueString(), content)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create owasp custom rule, got error: %s", err))
@@ -125,7 +130,10 @@ func (r *OwaspCustomRuleResource) Read(ctx context.Context, req resource.ReadReq
 
 	filename := strings.TrimSuffix(data.Filename.ValueString(), filepath.Ext(data.Filename.ValueString()))
 
-	response, err := r.client.ShowOwaspCustomRule(filename)
+	operation := ClientBackoff(func() (*api.LoadMasterDataResponse, error) {
+		return r.client.ShowOwaspCustomRule(filename)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown Rule" {
 			resp.State.RemoveResource(ctx)
@@ -171,7 +179,10 @@ func (r *OwaspCustomRuleResource) Delete(ctx context.Context, req resource.Delet
 
 	filename := strings.TrimSuffix(data.Filename.ValueString(), filepath.Ext(data.Filename.ValueString()))
 
-	_, err := r.client.DeleteOwaspCustomRule(filename)
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return r.client.DeleteOwaspCustomRule(filename)
+	})
+	_, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rule, got error: %s", err))
 		return
@@ -183,9 +194,12 @@ func (r *OwaspCustomRuleResource) ImportState(ctx context.Context, req resource.
 
 	filename := strings.TrimSuffix(req.ID, filepath.Ext(req.ID))
 
-	response, err := r.client.ShowOwaspCustomRule(filename)
+	operation := ClientBackoff(func() (*api.LoadMasterDataResponse, error) {
+		return r.client.ShowOwaspCustomRule(filename)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read modify url rule for import, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read owasp custom rule for import, got error: %s", err))
 	}
 
 	if resp.Diagnostics.HasError() {

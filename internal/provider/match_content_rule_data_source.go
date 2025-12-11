@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -131,7 +132,10 @@ func (d *MatchContentRuleDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	response, err := d.client.ShowRule(data.Id.ValueString())
+	operation := ClientBackoff(func() (*api.RuleResponse, error) {
+		return d.client.ShowRule(data.Id.ValueString())
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read match content rule, got error: %s", err))
 		return

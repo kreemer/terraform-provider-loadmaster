@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -102,7 +103,10 @@ func (r *SubVirtualServiceResource) Create(ctx context.Context, req resource.Cre
 	ctx = tflog.SetField(ctx, "virtual_service_id", data.VirtualServiceId)
 	tflog.Debug(ctx, "creating a resource")
 
-	response, err := r.client.AddSubVirtualService(data.VirtualServiceId.ValueString(), api.VirtualServiceParameters{})
+	operation := ClientBackoff(func() (*api.ShowSubVirtualServiceResponse, error) {
+		return r.client.AddSubVirtualService(data.VirtualServiceId.ValueString(), api.VirtualServiceParameters{})
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sub virtual service, got error: %s", err))
@@ -113,12 +117,15 @@ func (r *SubVirtualServiceResource) Create(ctx context.Context, req resource.Cre
 
 	data.Id = types.StringValue(strconv.Itoa(int(response.SubVS[len(response.SubVS)-1].VSIndex)))
 
-	response, err = r.client.ModifySubVirtualService(data.Id.ValueString(), api.VirtualServiceParameters{
-		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
-			VSType:   data.Type.ValueString(),
-			NickName: data.Nickname.ValueString(),
-		},
+	operation = ClientBackoff(func() (*api.ShowSubVirtualServiceResponse, error) {
+		return r.client.ModifySubVirtualService(data.Id.ValueString(), api.VirtualServiceParameters{
+			VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
+				VSType:   data.Type.ValueString(),
+				NickName: data.Nickname.ValueString(),
+			},
+		})
 	})
+	response, err = backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sub virtual service, got error: %s", err))
@@ -142,7 +149,12 @@ func (r *SubVirtualServiceResource) Read(ctx context.Context, req resource.ReadR
 	}
 
 	id := data.Id.ValueString()
-	response, err := r.client.ShowSubVirtualService(id)
+
+	operation := ClientBackoff(func() (*api.ShowSubVirtualServiceResponse, error) {
+		return r.client.ShowSubVirtualService(id)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
+
 	if err != nil {
 		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown VS" {
 			resp.State.RemoveResource(ctx)
@@ -169,14 +181,17 @@ func (r *SubVirtualServiceResource) Update(ctx context.Context, req resource.Upd
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	id := data.Id.ValueString()
-	response, err := r.client.ModifySubVirtualService(id, api.VirtualServiceParameters{
-		VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
-			NickName: data.Nickname.ValueString(),
-			VSType:   data.Type.ValueString(),
-		},
+	operation := ClientBackoff(func() (*api.ShowSubVirtualServiceResponse, error) {
+		return r.client.ModifySubVirtualService(id, api.VirtualServiceParameters{
+			VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
+				NickName: data.Nickname.ValueString(),
+				VSType:   data.Type.ValueString(),
+			},
+		})
 	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read sub virtual service, got error: %s", err))
 	}
 
 	if resp.Diagnostics.HasError() {
@@ -204,7 +219,10 @@ func (r *SubVirtualServiceResource) Delete(ctx context.Context, req resource.Del
 	}
 
 	id := data.Id.ValueString()
-	_, err := r.client.DeleteSubVirtualService(id)
+	operation := ClientBackoff(func() (*api.ShowSubVirtualServiceResponse, error) {
+		return r.client.ShowSubVirtualService(id)
+	})
+	_, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read sub virtual service, got error: %s", err))
 		return
@@ -215,10 +233,12 @@ func (r *SubVirtualServiceResource) ImportState(ctx context.Context, req resourc
 	var data SubVirtualServiceResourceModel
 
 	id := req.ID
-
-	response, err := r.client.ShowSubVirtualService(id)
+	operation := ClientBackoff(func() (*api.ShowSubVirtualServiceResponse, error) {
+		return r.client.ShowSubVirtualService(id)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read virtual service, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read sub virtual service, got error: %s", err))
 	}
 
 	if resp.Diagnostics.HasError() {
