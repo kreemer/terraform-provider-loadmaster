@@ -7,6 +7,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -117,9 +119,11 @@ func (r *OwaspCustomRuleResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	response, err := r.client.ShowOwaspCustomRule(data.Filename.ValueString())
+	filename := strings.TrimSuffix(data.Filename.ValueString(), filepath.Ext(data.Filename.ValueString()))
+
+	response, err := r.client.ShowOwaspCustomRule(filename)
 	if err != nil {
-		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Rule not found" {
+		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown Rule" {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -153,7 +157,9 @@ func (r *OwaspCustomRuleResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	_, err := r.client.DeleteOwaspCustomRule(data.Filename.ValueString())
+	filename := strings.TrimSuffix(data.Filename.ValueString(), filepath.Ext(data.Filename.ValueString()))
+
+	_, err := r.client.DeleteOwaspCustomRule(filename)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete rule, got error: %s", err))
 		return
@@ -163,7 +169,9 @@ func (r *OwaspCustomRuleResource) Delete(ctx context.Context, req resource.Delet
 func (r *OwaspCustomRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	var data OwaspCustomRuleResourceModel
 
-	response, err := r.client.ShowOwaspCustomRule(req.ID)
+	filename := strings.TrimSuffix(req.ID, filepath.Ext(req.ID))
+
+	response, err := r.client.ShowOwaspCustomRule(filename)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read modify url rule for import, got error: %s", err))
 	}

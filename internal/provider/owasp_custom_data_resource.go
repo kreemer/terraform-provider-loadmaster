@@ -121,7 +121,7 @@ func (r *OwaspCustomDataResource) Read(ctx context.Context, req resource.ReadReq
 
 	response, err := r.client.ShowOwaspCustomData(data.Filename.ValueString())
 	if err != nil {
-		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Rule not found" {
+		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown Rule" {
 			resp.State.RemoveResource(ctx)
 			return
 		}
