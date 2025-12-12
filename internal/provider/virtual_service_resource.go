@@ -127,7 +127,7 @@ func (r *VirtualServiceResource) Create(ctx context.Context, req resource.Create
 	ctx = tflog.SetField(ctx, "protocol", data.Protocol)
 	tflog.Debug(ctx, "creating a resource")
 
-	operation := ClientBackoff(func() (*api.AddVirtualServiceResponse, error) {
+	operation := ClientBackoff(func() (*api.VirtualServiceResponse, error) {
 		return r.client.AddVirtualService(data.Address.ValueString(), data.Port.ValueString(), data.Protocol.ValueString(), api.VirtualServiceParameters{
 			VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 				NickName: data.Nickname.ValueString(),
@@ -167,7 +167,7 @@ func (r *VirtualServiceResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	operation := ClientBackoff(func() (*api.ShowVirtualServiceResponse, error) {
+	operation := ClientBackoff(func() (*api.VirtualServiceResponse, error) {
 		return r.client.ShowVirtualService(data.Id.ValueString())
 	})
 	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
@@ -200,7 +200,7 @@ func (r *VirtualServiceResource) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	id := data.Id.ValueString()
-	operation := ClientBackoff(func() (*api.ModifyVirtualServiceResponse, error) {
+	operation := ClientBackoff(func() (*api.VirtualServiceResponse, error) {
 		return r.client.ModifyVirtualService(id, api.VirtualServiceParameters{
 			VirtualServiceParametersBasicProperties: &api.VirtualServiceParametersBasicProperties{
 				NickName: data.Nickname.ValueString(),
@@ -254,7 +254,7 @@ func (r *VirtualServiceResource) ImportState(ctx context.Context, req resource.I
 
 	id := req.ID
 
-	operation := ClientBackoff(func() (*api.ShowVirtualServiceResponse, error) {
+	operation := ClientBackoff(func() (*api.VirtualServiceResponse, error) {
 		return r.client.ShowVirtualService(id)
 	})
 	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))

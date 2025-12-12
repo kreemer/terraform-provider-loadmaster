@@ -90,8 +90,19 @@ func TestOwaspCustomRuleResourceDeletedByRemote(t *testing.T) {
 				PreConfig: func() {
 					deleteOwaspCustomRuleTestResource(t, "test_rule_replace_url.conf")
 				},
-				Config:             testOwaspCustomRuleResource(),
-				ExpectNonEmptyPlan: true,
+				Config: testOwaspCustomRuleResource(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.test_rule",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("test_rule_replace_url.conf"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.test_rule",
+						tfjsonpath.New("data"),
+						knownvalue.StringRegexp(regexp.MustCompile(`.*SecMarker BEGIN_ALLOWLIST_login.*`)),
+					),
+				},
 			},
 		},
 	})

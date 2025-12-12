@@ -112,7 +112,7 @@ func (d *VirtualServiceDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	id := data.Id.ValueString()
-	operation := ClientBackoff(func() (*api.ShowVirtualServiceResponse, error) {
+	operation := ClientBackoff(func() (*api.VirtualServiceResponse, error) {
 		return d.client.ShowVirtualService(id)
 	})
 	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
