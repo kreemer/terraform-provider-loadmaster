@@ -4,13 +4,18 @@
 package provider
 
 import (
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/kreemer/loadmaster-go-client/api"
 )
 
 func TestOwaspCustomRuleResource(t *testing.T) {
@@ -58,6 +63,56 @@ func TestOwaspCustomRuleResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestOwaspCustomRuleResourceDeletedByRemote(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testOwaspCustomRuleResource(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.test_rule",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("test_rule_replace_url.conf"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.test_rule",
+						tfjsonpath.New("data"),
+						knownvalue.StringRegexp(regexp.MustCompile(`.*SecMarker BEGIN_ALLOWLIST_login.*`)),
+					),
+				},
+			},
+			{
+				PreConfig: func() {
+					deleteOwaspCustomRuleTestResource(t, "test_rule_replace_url.conf")
+				},
+				Config:             testOwaspCustomRuleResource(),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func deleteOwaspCustomRuleTestResource(t *testing.T, s string) {
+	host := os.Getenv("LOADMASTER_HOST")
+	api_key := os.Getenv("LOADMASTER_API_KEY")
+
+	client := api.NewClientWithApiKey(host, api_key)
+
+	filename := strings.TrimSuffix(s, filepath.Ext(s))
+
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return client.DeleteOwaspCustomRule(filename)
+	})
+	_, err := backoff.Retry(t.Context(), operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
+	if err != nil {
+		t.FailNow()
+	}
+
 }
 
 func TestOwaspCustomRuleResourceRealData(t *testing.T) {

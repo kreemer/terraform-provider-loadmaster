@@ -4,13 +4,18 @@
 package provider
 
 import (
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
+	"github.com/cenkalti/backoff/v5"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/kreemer/loadmaster-go-client/api"
 )
 
 func TestOwaspCustomDataResource(t *testing.T) {
@@ -58,6 +63,56 @@ func TestOwaspCustomDataResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestOwaspCustomDataResourceDeletedByRemote(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testOwaspCustomDataResource(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_data.test_data",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("test_rule_replace_url.txt"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_data.test_data",
+						tfjsonpath.New("data"),
+						knownvalue.StringExact("Data"),
+					),
+				},
+			},
+			{
+				PreConfig: func() {
+					deleteOwaspCustomDataTestResource(t, "test_rule_replace_url.txt")
+				},
+				Config:             testOwaspCustomDataResource(),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func deleteOwaspCustomDataTestResource(t *testing.T, s string) {
+	host := os.Getenv("LOADMASTER_HOST")
+	api_key := os.Getenv("LOADMASTER_API_KEY")
+
+	client := api.NewClientWithApiKey(host, api_key)
+
+	filename := strings.TrimSuffix(s, filepath.Ext(s))
+
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return client.DeleteOwaspCustomData(filename)
+	})
+	_, err := backoff.Retry(t.Context(), operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
+	if err != nil {
+		t.FailNow()
+	}
+
 }
 
 func TestOwaspCustomDataResourceReal1(t *testing.T) {
