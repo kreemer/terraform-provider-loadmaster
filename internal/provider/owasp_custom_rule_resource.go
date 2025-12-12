@@ -135,7 +135,7 @@ func (r *OwaspCustomRuleResource) Read(ctx context.Context, req resource.ReadReq
 	})
 	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
 	if err != nil {
-		if serr, ok := err.(*api.LoadMasterError); ok && serr.Message == "Unknown Rule" {
+		if serr, ok := err.(*api.LoadMasterError); ok && serr.Code == 404 {
 			resp.State.RemoveResource(ctx)
 			return
 		}
