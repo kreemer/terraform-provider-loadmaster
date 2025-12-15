@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -151,6 +152,46 @@ func TestOwaspCustomDataResourceReal1(t *testing.T) {
 	})
 }
 
+func TestOwaspCustomDataResourceUpdate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testOwaspCustomDataResourceUpdate("1"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_data.test_data",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("test_rule_replace_url.txt"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_data.test_data",
+						tfjsonpath.New("data"),
+						knownvalue.StringExact("Data1"),
+					),
+				},
+			},
+			{
+				Config: testOwaspCustomDataResourceUpdate("2"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_data.test_data",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("test_rule_replace_url.txt"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_data.test_data",
+						tfjsonpath.New("data"),
+						knownvalue.StringExact("Data2"),
+					),
+				},
+			},
+		},
+	})
+}
+
 func testOwaspCustomDataResource() string {
 	return `
 resource "loadmaster_owasp_custom_data" "test_data" {
@@ -158,6 +199,15 @@ resource "loadmaster_owasp_custom_data" "test_data" {
   data = "Data"
 }
 `
+}
+
+func testOwaspCustomDataResourceUpdate(version string) string {
+	return fmt.Sprintf(`
+resource "loadmaster_owasp_custom_data" "test_data" {
+  filename = "test_rule_replace_url.txt"
+  data = "Data%s"
+}
+`, version)
 }
 
 func testOwaspCustomDataResourceReal1() string {

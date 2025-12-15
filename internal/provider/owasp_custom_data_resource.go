@@ -60,9 +60,6 @@ func (r *OwaspCustomDataResource) Schema(ctx context.Context, req resource.Schem
 			"data": schema.StringAttribute{
 				MarkdownDescription: "The content of the custom data.",
 				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 		},
 	}
@@ -115,7 +112,7 @@ func (r *OwaspCustomDataResource) Create(ctx context.Context, req resource.Creat
 	data.Filename = types.StringValue(data.Filename.ValueString())
 	data.Data = types.StringValue(data.Data.ValueString())
 
-	tflog.Trace(ctx, "created a resource owasp custom rule")
+	tflog.Trace(ctx, "created a resource owasp custom data")
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -163,7 +160,30 @@ func (r *OwaspCustomDataResource) Update(ctx context.Context, req resource.Updat
 	var data OwaspCustomDataResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	resp.Diagnostics.AddError("Client Error", "Unable to update owasp custom data, got error")
+
+	tflog.Debug(ctx, "updating the resource")
+
+	// Decoding shenanigans
+	content := base64.StdEncoding.EncodeToString([]byte(r.getMarker() + data.Data.ValueString()))
+
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return r.client.AddOwaspCustomData(data.Filename.ValueString(), content)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
+
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update owasp custom data, got error: %s", err))
+		return
+	}
+	tflog.SetField(ctx, "response", response)
+	tflog.Trace(ctx, "Received valid response from API")
+
+	data.Filename = types.StringValue(data.Filename.ValueString())
+	data.Data = types.StringValue(data.Data.ValueString())
+
+	tflog.Trace(ctx, "updated a resource owasp custom data")
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *OwaspCustomDataResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

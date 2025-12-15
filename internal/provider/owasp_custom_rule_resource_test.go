@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -48,6 +49,46 @@ func TestOwaspCustomRuleResource(t *testing.T) {
 			},
 			{
 				Config: testOwaspCustomRuleResource(),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.test_rule",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("test_rule_replace_url.conf"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.test_rule",
+						tfjsonpath.New("data"),
+						knownvalue.StringRegexp(regexp.MustCompile(`.*SecMarker BEGIN_ALLOWLIST_login.*`)),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestOwaspCustomRuleResourceUpdate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testOwaspCustomRuleResourceUpdate("1"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.test_rule",
+						tfjsonpath.New("filename"),
+						knownvalue.StringExact("test_rule_replace_url.conf"),
+					),
+					statecheck.ExpectKnownValue(
+						"loadmaster_owasp_custom_rule.test_rule",
+						tfjsonpath.New("data"),
+						knownvalue.StringRegexp(regexp.MustCompile(`.*SecMarker BEGIN_ALLOWLIST_login.*`)),
+					),
+				},
+			},
+			{
+				Config: testOwaspCustomRuleResourceUpdate("2"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"loadmaster_owasp_custom_rule.test_rule",
@@ -249,6 +290,24 @@ EOT
 `
 }
 
+func testOwaspCustomRuleResourceUpdate(version string) string {
+	return fmt.Sprintf(`
+resource "loadmaster_owasp_custom_rule" "test_rule" {
+  filename = "test_rule_replace_url.conf"
+  data = <<EOT
+SecMarker BEGIN_ALLOWLIST_login
+ 
+# START allowlisting block for URI /login SecRule REQUEST_URI "!@beginsWith /login%s" \
+    "id:11001,phase:1,pass,t:lowercase,nolog,skipAfter:END_ALLOWLIST_login"
+SecRule REQUEST_URI "!@beginsWith /login%s" \
+    "id:11002,phase:2,pass,t:lowercase,nolog,skipAfter:END_ALLOWLIST_login"
+ 
+SecMarker END_ALLOWLIST_login
+EOT
+}
+`, version, version)
+}
+
 func testRealOwaspCustomRuleWithData1() string {
 	return `
 
@@ -319,6 +378,5 @@ EOT
 
   depends_on = [loadmaster_owasp_custom_data.data]
 }
-
 `
 }
