@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -22,6 +23,7 @@ import (
 var _ provider.Provider = &LoadMasterProvider{}
 var _ provider.ProviderWithFunctions = &LoadMasterProvider{}
 var _ provider.ProviderWithEphemeralResources = &LoadMasterProvider{}
+var _ provider.ProviderWithActions = &LoadMasterProvider{}
 
 // ScaffoldingProvider defines the provider implementation.
 type LoadMasterProvider struct {
@@ -175,6 +177,7 @@ func (p *LoadMasterProvider) Configure(ctx context.Context, req provider.Configu
 	}
 	resp.DataSourceData = client
 	resp.ResourceData = client
+	resp.ActionData = client
 }
 
 func (p *LoadMasterProvider) Resources(ctx context.Context) []func() resource.Resource {
@@ -216,6 +219,12 @@ func (p *LoadMasterProvider) DataSources(ctx context.Context) []func() datasourc
 
 func (p *LoadMasterProvider) Functions(ctx context.Context) []func() function.Function {
 	return nil
+}
+
+func (p *LoadMasterProvider) Actions(ctx context.Context) []func() action.Action {
+	return []func() action.Action{
+		NewVirtualServiceRestartAction,
+	}
 }
 
 func New(version string) func() provider.Provider {
