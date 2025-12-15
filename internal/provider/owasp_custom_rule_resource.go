@@ -60,9 +60,6 @@ func (r *OwaspCustomRuleResource) Schema(ctx context.Context, req resource.Schem
 			"data": schema.StringAttribute{
 				MarkdownDescription: "The content of the custom rule.",
 				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 		},
 	}
@@ -164,8 +161,29 @@ func (r *OwaspCustomRuleResource) Update(ctx context.Context, req resource.Updat
 	var data OwaspCustomRuleResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	resp.Diagnostics.AddError("Client Error", "Unable to update owasp custom rule, got error")
 
+	tflog.Debug(ctx, "updating the resource")
+
+	content := base64.StdEncoding.EncodeToString([]byte(r.getMarker() + data.Data.ValueString()))
+
+	operation := ClientBackoff(func() (*api.LoadMasterResponse, error) {
+		return r.client.AddOwaspCustomRule(data.Filename.ValueString(), content)
+	})
+	response, err := backoff.Retry(ctx, operation, backoff.WithBackOff(backoff.NewExponentialBackOff()))
+
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update owasp custom rule, got error: %s", err))
+		return
+	}
+	tflog.SetField(ctx, "response", response)
+	tflog.Trace(ctx, "Received valid response from API")
+
+	data.Filename = types.StringValue(data.Filename.ValueString())
+	data.Data = types.StringValue(data.Data.ValueString())
+
+	tflog.Trace(ctx, "updated a resource owasp custom rule")
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *OwaspCustomRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
